@@ -20,7 +20,7 @@ export const SITE_CONFIG = {
   },
   contact: {
     email: "hello@connectandconvert.tech",
-    phone: "+91 98765 43210",
+    phone: "",
     telegramUsername: "connectandconvert",
     telegramUrl: "https://t.me/connectandconvert",
   },

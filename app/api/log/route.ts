@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     const safeSlug = slug || (reqPath ? String(reqPath).replace(/^\/lp\//, "") : "unknown");
 
     if (type && safeSlug) {
-      recordVisit(safeSlug, type, {
+      await recordVisit(safeSlug, type, {
         device,
         browser,
         os,

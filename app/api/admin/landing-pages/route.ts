@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
   }
 
-  const pages = getAllLandingPages();
+  const pages = await getAllLandingPages();
   return NextResponse.json({ success: true, pages });
 }
 
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       .replace(/[^a-z0-9-_]/g, "-")
       .replace(/-+/g, "-");
 
-    const saved = saveLandingPage({
+    const saved = await saveLandingPage({
       ...body,
       slug: cleanedSlug,
     });

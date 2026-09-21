@@ -52,14 +52,15 @@ export interface LandingPageConfig {
 
   // Analytics
   metaPixelId?: string;
-  gaMeasurementId?: string;
 
   // Styling
   themeAccent: ThemeAccent;
 
   // Metrics (computed or stored)
-  visits?: number;
-  clicks?: number;
+  visits?: number; // Total landings
+  clicks?: number; // Total clicks / redirects combined
+  subscribes?: number; // Manual button clicks
+  autoredirects?: number; // Auto-redirect timer completions
 }
 
 export interface VisitLogEntry {
@@ -77,4 +78,39 @@ export interface VisitLogEntry {
   country?: string;
   city?: string;
   attribution?: Record<string, string | null>;
+}
+
+export interface PageAnalyticsMetrics {
+  totalLanding: number;
+  totalSubscribe: number;
+  totalAutoredirect: number;
+  totalConversions: number;
+  subscribeCtr: string;
+  autoredirectRate: string;
+  overallConversionRate: string;
+}
+
+export interface DistributionItem {
+  name: string;
+  count: number;
+  percentage: string;
+}
+
+export interface AttributionItem {
+  source: string;
+  medium: string;
+  campaign: string;
+  count: number;
+  percentage: string;
+}
+
+export interface PageAnalyticsReport {
+  page: LandingPageConfig;
+  generatedAt: string;
+  metrics: PageAnalyticsMetrics;
+  deviceBreakdown: DistributionItem[];
+  browserBreakdown: DistributionItem[];
+  osBreakdown: DistributionItem[];
+  attributionBreakdown: AttributionItem[];
+  recentLogs: VisitLogEntry[];
 }

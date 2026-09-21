@@ -11,8 +11,8 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
   }
 
-  const pages = getAllLandingPages();
-  const logs = getRecentVisitLogs(50);
+  const pages = await getAllLandingPages();
+  const logs = await getRecentVisitLogs(50);
 
   const totalPages = pages.length;
   const publishedPages = pages.filter((p) => p.status === "published").length;

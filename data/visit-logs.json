@@ -1,14 +1,14 @@
 [
   {
-    "id": "log-1789997407560-q43w",
-    "slug": "vip-growth",
-    "type": "websitevisit",
-    "ts": "2026-09-21T13:30:07.561Z",
+    "id": "log-1790008883389-8f0n",
+    "slug": "profit",
+    "type": "autoredirect",
+    "ts": "2026-09-21T16:41:23.389Z",
     "device": "Desktop",
     "browser": "Chrome",
     "os": "Windows 10/11",
-    "path": "/lp/vip-growth",
-    "referrer": "http://localhost:3000/lp/vip-growth",
+    "path": "/lp/profit",
+    "referrer": "http://localhost:3000/lp/profit",
     "cid": null,
     "country": "IN",
     "city": "",
@@ -21,18 +21,19 @@
       "fbclid": null,
       "gclid": null,
       "cid": null
-    }
+    },
+    "_id": "6ab15e33c2c1d8150fb65567"
   },
   {
-    "id": "log-1789997007325-jayc",
-    "slug": "vip-growth",
+    "id": "log-1790008880076-axzw",
+    "slug": "profit",
     "type": "websitevisit",
-    "ts": "2026-09-21T13:23:27.325Z",
+    "ts": "2026-09-21T16:41:20.076Z",
     "device": "Desktop",
     "browser": "Chrome",
     "os": "Windows 10/11",
-    "path": "/lp/vip-growth",
-    "referrer": "http://localhost:3000/lp/vip-growth",
+    "path": "/lp/profit",
+    "referrer": "http://localhost:3000/lp/profit",
     "cid": null,
     "country": "IN",
     "city": "",
@@ -45,17 +46,68 @@
       "fbclid": null,
       "gclid": null,
       "cid": null
-    }
+    },
+    "_id": "6ab15e30c2c1d8150fb65566"
   },
   {
-    "id": "log-1789996994916-wwin",
-    "slug": "vip-growth",
-    "type": "websitevisit",
-    "ts": "2026-09-21T13:23:14.916Z",
+    "id": "log-1790008858394-rznn",
+    "slug": "profit",
+    "type": "autoredirect",
+    "ts": "2026-09-21T16:40:58.394Z",
     "device": "Desktop",
     "browser": "Chrome",
     "os": "Windows 10/11",
-    "path": "/lp/vip-growth",
+    "path": "/lp/profit",
+    "referrer": "http://localhost:3000/lp/profit",
+    "cid": null,
+    "country": "IN",
+    "city": "",
+    "attribution": {
+      "utmSource": null,
+      "utmMedium": null,
+      "utmCampaign": null,
+      "utmContent": null,
+      "utmTerm": null,
+      "fbclid": null,
+      "gclid": null,
+      "cid": null
+    },
+    "_id": "6ab15e1ac2c1d8150fb65565"
+  },
+  {
+    "id": "log-1790008854638-2v1j",
+    "slug": "profit",
+    "type": "websitevisit",
+    "ts": "2026-09-21T16:40:54.638Z",
+    "device": "Desktop",
+    "browser": "Chrome",
+    "os": "Windows 10/11",
+    "path": "/lp/profit",
+    "referrer": "http://localhost:3000/lp/profit",
+    "cid": null,
+    "country": "IN",
+    "city": "",
+    "attribution": {
+      "utmSource": null,
+      "utmMedium": null,
+      "utmCampaign": null,
+      "utmContent": null,
+      "utmTerm": null,
+      "fbclid": null,
+      "gclid": null,
+      "cid": null
+    },
+    "_id": "6ab15e16c2c1d8150fb65564"
+  },
+  {
+    "id": "log-1790008660500-5p6q",
+    "slug": "profit",
+    "type": "autoredirect",
+    "ts": "2026-09-21T16:37:40.500Z",
+    "device": "Desktop",
+    "browser": "Chrome",
+    "os": "Windows 10/11",
+    "path": "/lp/profit",
     "referrer": "",
     "cid": null,
     "country": "IN",
@@ -69,6 +121,32 @@
       "fbclid": null,
       "gclid": null,
       "cid": null
-    }
+    },
+    "_id": "6ab15d54998d6a01ec0f8c4b"
+  },
+  {
+    "id": "log-1790008648727-ogg9",
+    "slug": "profit",
+    "type": "websitevisit",
+    "ts": "2026-09-21T16:37:28.727Z",
+    "device": "Desktop",
+    "browser": "Chrome",
+    "os": "Windows 10/11",
+    "path": "/lp/profit",
+    "referrer": "",
+    "cid": null,
+    "country": "IN",
+    "city": "",
+    "attribution": {
+      "utmSource": null,
+      "utmMedium": null,
+      "utmCampaign": null,
+      "utmContent": null,
+      "utmTerm": null,
+      "fbclid": null,
+      "gclid": null,
+      "cid": null
+    },
+    "_id": "6ab15d48998d6a01ec0f8c4a"
   }
 ]

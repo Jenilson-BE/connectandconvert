@@ -18,6 +18,7 @@ import {
   Check,
   RefreshCw,
   TrendingUp,
+  BarChart3,
 } from "lucide-react";
 import { LandingPageConfig, VisitLogEntry } from "@/lib/landing-types";
 import { Button } from "@/components/ui/Button";
@@ -339,10 +340,24 @@ export default function AdminDashboardPage() {
         <div className="bg-white rounded-3xl border border-[#E8E2EF] overflow-hidden shadow-xs">
           {filteredPages.length === 0 ? (
             <div className="p-12 text-center space-y-4">
-              <p className="text-sm text-[#625A6D]">No landing pages match your search.</p>
-              <Button href="/admin/new" variant="primary" size="sm">
-                Create First Page
-              </Button>
+              <div className="w-12 h-12 rounded-2xl bg-[#F5EFFF] text-[#6D28D9] flex items-center justify-center mx-auto text-xl">
+                📄
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#17121F]">
+                  {pages.length === 0 ? "No Landing Pages Yet" : "No Matching Landing Pages"}
+                </h3>
+                <p className="text-xs text-[#625A6D] mt-1 max-w-sm mx-auto">
+                  {pages.length === 0
+                    ? "Start fresh by clicking 'Create First Page' to configure your first high-converting landing campaign."
+                    : "No pages matched your search filter. Try clearing your search keyword."}
+                </p>
+              </div>
+              {pages.length === 0 && (
+                <Button href="/admin/new" variant="primary" size="sm">
+                  Create First Page
+                </Button>
+              )}
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -427,6 +442,14 @@ export default function AdminDashboardPage() {
 
                         <td className="py-4 px-6 text-right">
                           <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              href={`/admin/report/${p.slug}`}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-[#F5EFFF] text-[#6D28D9] text-xs font-bold hover:bg-[#E9D5FF] transition-colors"
+                              title="View Analytics & Export PDF Report"
+                            >
+                              <BarChart3 className="w-3.5 h-3.5" />
+                              <span>Report</span>
+                            </Link>
                             <a
                               href={`/lp/${p.slug}`}
                               target="_blank"

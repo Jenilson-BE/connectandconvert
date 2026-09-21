@@ -1,4 +1,3 @@
-import { trackGAEvent } from "./ga";
 import { trackPixelEvent, trackPixelStandard } from "./meta-pixel";
 import { getAttributionFlat } from "./attribution";
 
@@ -11,7 +10,6 @@ export function trackEvent(
   const attribution = getAttributionFlat();
   const merged = { ...attribution, ...params };
 
-  trackGAEvent(eventName, merged);
   trackPixelEvent(eventName, merged);
 }
 

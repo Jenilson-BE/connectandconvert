@@ -5,7 +5,6 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Crown, Send, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 import { LandingPageConfig } from "@/lib/landing-types";
-import { initGA } from "@/lib/landing-engine/ga";
 import { initMetaPixel } from "@/lib/landing-engine/meta-pixel";
 import { captureAttribution } from "@/lib/landing-engine/attribution";
 import {
@@ -69,7 +68,6 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
 
   // Initialize tracking
   React.useEffect(() => {
-    initGA(page.gaMeasurementId);
     initMetaPixel(page.metaPixelId);
     captureAttribution();
     sendVisitLog("websitevisit", page.slug);
@@ -242,6 +240,7 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
               width={160}
               height={160}
               priority
+              unoptimized={Boolean(page.logoUrl && (page.logoUrl.startsWith("http://") || page.logoUrl.startsWith("https://")))}
               className="h-full w-full object-contain"
             />
           </div>

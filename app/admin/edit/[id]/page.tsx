@@ -12,7 +12,7 @@ export default async function EditLandingPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const page = getLandingPageById(id);
+  const page = await getLandingPageById(id);
 
   if (!page) {
     notFound();

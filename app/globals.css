@@ -71,3 +71,24 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Print optimizations for Campaign Analytics PDF Reports */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 12mm 14mm;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #17121F !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .print-avoid-break {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
+

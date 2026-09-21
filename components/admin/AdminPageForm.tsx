@@ -74,7 +74,6 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
     privacyText: initialData?.privacyText || "This website may use privacy-compliant analytics to understand campaign visits.",
 
     metaPixelId: initialData?.metaPixelId || "",
-    gaMeasurementId: initialData?.gaMeasurementId || "",
     themeAccent: (initialData?.themeAccent as ThemeAccent) || "violet",
   });
 
@@ -674,38 +673,20 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
               Analytics Pixels &amp; Visual Theme
             </h2>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
-                  Meta Pixel ID (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. 123456789012345"
-                  value={formData.metaPixelId}
-                  onChange={(e) => handleChange("metaPixelId", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
-                />
-                <p className="mt-1 text-[11px] text-[#625A6D]">
-                  Fires PageView, ViewContent, and Subscribe events for this specific page.
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
-                  Google Analytics Measurement ID (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. G-XXXXXXXXXX"
-                  value={formData.gaMeasurementId}
-                  onChange={(e) => handleChange("gaMeasurementId", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
-                />
-                <p className="mt-1 text-[11px] text-[#625A6D]">
-                  GA4 Measurement ID with UTM attribution mapping.
-                </p>
-              </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
+                Meta (Facebook) Pixel ID (Optional)
+              </label>
+              <input
+                type="text"
+                placeholder="e.g. 1234567890123456"
+                value={formData.metaPixelId}
+                onChange={(e) => handleChange("metaPixelId", e.target.value)}
+                className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
+              />
+              <p className="mt-1 text-[11px] text-[#625A6D]">
+                Fires PageView, ViewContent, and Subscribe events for this specific page.
+              </p>
             </div>
 
             <div>

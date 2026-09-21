@@ -5,7 +5,7 @@ import { LandingTemplateView } from "@/components/landing/LandingTemplateView";
 import { SITE_CONFIG } from "@/lib/constants";
 
 export async function generateStaticParams() {
-  const pages = getAllLandingPages();
+  const pages = await getAllLandingPages();
   return pages.map((p) => ({ slug: p.slug }));
 }
 
@@ -15,7 +15,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const page = getLandingPageBySlug(slug);
+  const page = await getLandingPageBySlug(slug);
 
   if (!page) {
     return { title: "Page Not Found" };
@@ -50,7 +50,7 @@ export default async function DynamicLandingPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const page = getLandingPageBySlug(slug);
+  const page = await getLandingPageBySlug(slug);
 
   if (!page) {
     notFound();
