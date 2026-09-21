@@ -1,0 +1,29 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="630" fill="#17121F"/>
+  <circle cx="1050" cy="180" r="320" fill="#6D28D9" fill-opacity="0.3" filter="blur(140px)"/>
+  <circle cx="150" cy="500" r="280" fill="#A855F7" fill-opacity="0.25" filter="blur(120px)"/>
+
+  <!-- Grid overlay -->
+  <path d="M100 0V630M250 0V630M400 0V630M550 0V630M700 0V630M850 0V630M1000 0V630M1150 0V630" stroke="#FFFFFF" stroke-opacity="0.03"/>
+  <path d="M0 100H1200M0 250H1200M0 400H1200M0 550H1200" stroke="#FFFFFF" stroke-opacity="0.03"/>
+
+  <!-- Logo Emblem -->
+  <g transform="translate(100, 100)">
+    <rect width="64" height="64" rx="16" fill="#241B33" stroke="#6D28D9" stroke-width="2"/>
+    <text x="32" y="42" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="24" font-weight="bold" text-anchor="middle">CC</text>
+  </g>
+
+  <!-- Tagline -->
+  <text x="100" y="230" fill="#A855F7" font-family="system-ui, sans-serif" font-size="20" font-weight="700" letter-spacing="3">DIGITAL MARKETING • CREATIVE • GROWTH</text>
+
+  <!-- Title -->
+  <text x="100" y="320" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="64" font-weight="800">Connect with your audience.</text>
+  <text x="100" y="400" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="64" font-weight="800">Convert attention into growth.</text>
+
+  <!-- Subtitle -->
+  <text x="100" y="480" fill="#C4B5FD" font-family="system-ui, sans-serif" font-size="24" font-weight="400">Meta Ads • Google Ads • SEO • Social Media • Branding • WhatsApp Automation</text>
+
+  <!-- Bottom strip -->
+  <rect x="100" y="530" width="1000" height="2" fill="#2E2440"/>
+  <text x="100" y="570" fill="#9E94A8" font-family="system-ui, sans-serif" font-size="18">https://connectandconvert.tech • Pan-India Agency</text>
+</svg>

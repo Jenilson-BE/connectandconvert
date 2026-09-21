@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Profit Queen — White & Lavender Theme (Tailwind CSS v4)
+   ============================================================ */
+
+@theme {
+  --color-bg: #FAFAFF;
+  --color-surface: #F3F0FF;
+  --color-elevated: #EDE9FE;
+  --color-primary: #7C3AED;
+  --color-primary-dark: #6D28D9;
+  --color-primary-light: #A78BFA;
+  --color-accent: #DDD6FE;
+  --color-green: #10B981;
+  --color-secondary: #6B7280;
+  --color-muted: #9CA3AF;
+  --color-text: #1E1B4B;
+  --color-text-soft: #4C1D95;
+  --color-border: rgba(124, 58, 237, 0.12);
+
+  --font-display: "Playfair Display", serif;
+  --font-body: "Inter", sans-serif;
+}
+
+/* ─── Base ─────────────────────────────────────────────────── */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  overflow-x: hidden;
+  min-height: 100svh;
+}
+
+/* ─── Reduced Motion ──────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

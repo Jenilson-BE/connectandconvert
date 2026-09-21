@@ -1,0 +1,57 @@
+<svg width="1000" height="560" viewBox="0 0 1000 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="560" rx="16" fill="#17121F"/>
+  <circle cx="200" cy="150" r="220" fill="#6D28D9" fill-opacity="0.2" filter="blur(100px)"/>
+  <circle cx="800" cy="400" r="220" fill="#A855F7" fill-opacity="0.25" filter="blur(90px)"/>
+
+  <rect x="70" y="60" width="140" height="32" rx="16" fill="#6D28D9" fill-opacity="0.4"/>
+  <rect x="70" y="60" width="140" height="32" rx="16" stroke="#A855F7" stroke-opacity="0.5"/>
+  <text x="140" y="81" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12" font-weight="600" text-anchor="middle" letter-spacing="1">CASE STUDY</text>
+
+  <text x="70" y="140" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="34" font-weight="700">Intent-Driven Real Estate Search Architecture</text>
+  <text x="70" y="180" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="18" font-weight="500">Negative Keyword Strategy and Sub-5-Second WhatsApp Qualification Funnel</text>
+
+  <!-- Flow diagram -->
+  <g transform="translate(70, 230)">
+    <!-- Stage 1: High Intent Search -->
+    <rect x="0" y="0" width="260" height="260" rx="14" fill="#221830" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="24" y="36" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">STEP 1: INTENT FILTER</text>
+    <text x="24" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Google Search Ads</text>
+    <rect x="24" y="90" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="115" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Exact &amp; Phrase Match Only</text>
+    <rect x="24" y="140" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="165" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">200+ Negative Keywords Blocked</text>
+    <rect x="24" y="190" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="215" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Baseline Pricing Stated in Copy</text>
+
+    <!-- Arrow -->
+    <path d="M275 130H305" stroke="#A855F7" stroke-width="2"/>
+    <path d="M300 125L305 130L300 135" stroke="#A855F7" stroke-width="2"/>
+
+    <!-- Stage 2: Fast Landing Experience -->
+    <rect x="320" y="0" width="260" height="260" rx="14" fill="#2A1E3D" stroke="#A855F7" stroke-width="1.5"/>
+    <text x="344" y="36" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="12" font-weight="700">STEP 2: LANDING PAGE</text>
+    <text x="344" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Frictionless Experience</text>
+    <rect x="344" y="90" width="212" height="40" rx="8" fill="#1F172B"/>
+    <text x="356" y="115" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Sub-1s Mobile Page Load</text>
+    <rect x="344" y="140" width="212" height="40" rx="8" fill="#1F172B"/>
+    <text x="356" y="165" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Interactive Floor Plans</text>
+    <rect x="344" y="190" width="212" height="40" rx="8" fill="#6D28D9" fill-opacity="0.4"/>
+    <text x="356" y="215" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="12" font-weight="600">WhatsApp Dispatch CTA</text>
+
+    <!-- Arrow -->
+    <path d="M595 130H625" stroke="#A855F7" stroke-width="2"/>
+    <path d="M620 125L625 130L620 135" stroke="#A855F7" stroke-width="2"/>
+
+    <!-- Stage 3: WhatsApp Bot & Counselor Alert -->
+    <rect x="640" y="0" width="220" height="260" rx="14" fill="#221830" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="664" y="36" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">STEP 3: CONVERSION</text>
+    <text x="664" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Instant Qualification</text>
+    <circle cx="690" cy="115" r="16" fill="#25D366"/>
+    <path d="M687 112C687 110.5 688 109 690 109C692 109 693 110.5 693 112C693 113.2 692.3 114.2 691.3 114.7L691.5 116.5L689.5 115.8C688 115.4 687 113.8 687 112Z" fill="#FFFFFF"/>
+    <text x="716" y="120" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">&lt;5s Brochure Sent</text>
+    <circle cx="690" cy="165" r="16" fill="#6D28D9"/>
+    <text x="716" y="170" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Budget Verified</text>
+    <circle cx="690" cy="215" r="16" fill="#A855F7"/>
+    <text x="716" y="220" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Counselor Alerted</text>
+  </g>
+</svg>

@@ -1,0 +1,41 @@
+[
+  {
+    "id": "lp-vip-growth-sprint",
+    "slug": "vip-growth",
+    "status": "published",
+    "createdAt": "2026-09-21T18:15:00.000Z",
+    "updatedAt": "2026-09-21T18:15:00.000Z",
+    "title": "Connect & Convert — VIP Growth Sprint",
+    "metaDescription": "Exclusive access to our private marketing intelligence and performance ad frameworks community.",
+    "ogImage": "/logo.png",
+    "brandName": "Connect & Convert VIP",
+    "topBadge": "Private Performance Circle",
+    "statusBadge": "Limited Invitations (8 Spots Left)",
+    "logoUrl": "/logo.png",
+    "preHeadline": "Exclusive Marketing Mastermind",
+    "headlineMain": "Connect &",
+    "headlineHighlight": "Convert",
+    "subHeadline": "Scale Your Client Acquisition With Proven Direct-Response Ads.",
+    "description": "Weekly campaign teardowns, high-converting ad copy angles, and server-side tracking blueprints.",
+    "ctaText": "JOIN VIP TELEGRAM COMMUNITY",
+    "ctaSubtext": "Instant access to private marketing resources",
+    "destinationUrl": "https://t.me/connectandconvert",
+    "autoRedirect": false,
+    "redirectAfterSeconds": 10,
+    "startOnFirstScroll": false,
+    "stats": {
+      "members": "1.8K+",
+      "access": "Instant",
+      "pricing": "FREE",
+      "content": "Weekly"
+    },
+    "disclaimerText": "Connect & Convert provides performance advertising frameworks and educational marketing collateral for growing businesses.",
+    "footerText": "Professional marketing education. Past campaign outcomes do not guarantee future commercial return.",
+    "privacyText": "Your communication is strictly governed by our privacy policy and consent requirements. Zero spam.",
+    "metaPixelId": "",
+    "gaMeasurementId": "",
+    "themeAccent": "purple",
+    "visits": 88,
+    "clicks": 39
+  }
+]

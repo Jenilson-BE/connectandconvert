@@ -1,0 +1,21 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="64" height="64" rx="14" fill="#FAF9FC"/>
+  <rect x="1" y="1" width="62" height="62" rx="13" stroke="#E8E2EF" stroke-width="2"/>
+  
+  <!-- Left Purple C -->
+  <path d="M26 19C21 19 16 23 16 32C16 41 21 45 26 45C29 45 32 43 33 40L28 37C27 39 26 40 25 40C22 40 20 37 20 32C20 27 22 24 25 24C27 24 28 25 29 27L33 24C31 21 29 19 26 19Z" fill="url(#purple_grad)"/>
+
+  <!-- Right Dark C with Arrow -->
+  <path d="M40 19C35 19 31 22 30 26L34 29C35 26 37 24 40 24C43 24 45 27 45 32C45 37 43 40 40 40C37 40 35 38 34 35L30 38C31 42 35 45 40 45C46 45 50 40 50 32C50 23 46 19 40 19Z" fill="#17121F"/>
+
+  <!-- Upward Arrow -->
+  <path d="M28 42L45 22" stroke="#6D28D9" stroke-width="4" stroke-linecap="round"/>
+  <path d="M37 20H47V30" stroke="#6D28D9" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <defs>
+    <linearGradient id="purple_grad" x1="16" y1="19" x2="33" y2="45" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#6D28D9"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,36 @@
+<svg width="800" height="500" viewBox="0 0 800 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="500" rx="16" fill="#17121F"/>
+  <circle cx="400" cy="200" r="180" fill="#6D28D9" fill-opacity="0.2" filter="blur(90px)"/>
+  
+  <rect x="60" y="60" width="140" height="32" rx="16" fill="#6D28D9" fill-opacity="0.4"/>
+  <rect x="60" y="60" width="140" height="32" rx="16" stroke="#A855F7" stroke-opacity="0.5"/>
+  <text x="130" y="81" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12" font-weight="600" text-anchor="middle" letter-spacing="1">CONCEPT WORK</text>
+
+  <text x="60" y="140" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="28" font-weight="700">Apex Corporate Law</text>
+  <text x="60" y="175" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="16" font-weight="500">Topical Authority Architecture &amp; AI Answer Engine Visibility</text>
+
+  <g transform="translate(60, 220)">
+    <!-- Architecture Diagram Nodes -->
+    <rect x="0" y="30" width="180" height="150" rx="12" fill="#241B33" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="24" y="65" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">CORE ENTITY</text>
+    <text x="24" y="90" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="15" font-weight="600">Corporate Law</text>
+    <text x="24" y="120" fill="#9E94A8" font-family="system-ui, sans-serif" font-size="12">M&amp;A, Cross-Border, Regulatory Compliance</text>
+
+    <path d="M180 105H240" stroke="#A855F7" stroke-width="2" stroke-dasharray="4 4"/>
+
+    <rect x="240" y="0" width="220" height="200" rx="12" fill="#2A1E3D" stroke="#A855F7" stroke-width="1.5"/>
+    <rect x="256" y="16" width="100" height="20" rx="10" fill="#6D28D9"/>
+    <text x="306" y="30" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="10" font-weight="700" text-anchor="middle">AEO FORMAT</text>
+    <text x="256" y="65" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="14" font-weight="600">Schema.org JSON-LD</text>
+    <text x="256" y="95" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Structured FAQPage</text>
+    <text x="256" y="120" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Direct-Definition Nodes</text>
+    <text x="256" y="145" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Citation Attribution</text>
+
+    <path d="M460 105H520" stroke="#A855F7" stroke-width="2" stroke-dasharray="4 4"/>
+
+    <rect x="520" y="30" width="160" height="150" rx="12" fill="#241B33" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="540" y="65" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">AI SUMMARY</text>
+    <text x="540" y="90" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="14" font-weight="600">Cited in LLM</text>
+    <text x="540" y="120" fill="#9E94A8" font-family="system-ui, sans-serif" font-size="11">Perplexity &amp; ChatGPT Answer Inclusion</text>
+  </g>
+</svg>

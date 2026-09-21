@@ -1,0 +1,59 @@
+<svg width="1000" height="560" viewBox="0 0 1000 560" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1000" height="560" rx="16" fill="#17121F"/>
+  <circle cx="850" cy="150" r="220" fill="#6D28D9" fill-opacity="0.25" filter="blur(100px)"/>
+  <circle cx="150" cy="450" r="200" fill="#A855F7" fill-opacity="0.2" filter="blur(90px)"/>
+
+  <rect x="70" y="60" width="140" height="32" rx="16" fill="#6D28D9" fill-opacity="0.4"/>
+  <rect x="70" y="60" width="140" height="32" rx="16" stroke="#A855F7" stroke-opacity="0.5"/>
+  <text x="140" y="81" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12" font-weight="600" text-anchor="middle" letter-spacing="1">CASE STUDY</text>
+
+  <text x="70" y="140" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="34" font-weight="700">D2C Performance Creative Matrix</text>
+  <text x="70" y="180" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="18" font-weight="500">Framework for Variable Testing, Hook Variation, and Creative Scalability</text>
+
+  <!-- Visual Blueprint Matrix -->
+  <g transform="translate(70, 230)">
+    <!-- Column 1: Angle -->
+    <rect x="0" y="0" width="260" height="260" rx="14" fill="#221830" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="24" y="36" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">PHASE 1: HOOK DISCOVERY</text>
+    <text x="24" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">First 3 Seconds</text>
+    <rect x="24" y="90" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="115" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Visual Disruption (Motion/Color)</text>
+    <rect x="24" y="140" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="165" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Direct Problem Callout</text>
+    <rect x="24" y="190" width="212" height="40" rx="8" fill="#2E2042"/>
+    <text x="36" y="215" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Contrarian Curiosity Frame</text>
+
+    <!-- Arrow -->
+    <path d="M275 130H305" stroke="#A855F7" stroke-width="2"/>
+    <path d="M300 125L305 130L300 135" stroke="#A855F7" stroke-width="2"/>
+
+    <!-- Column 2: Sandbox Testing -->
+    <rect x="320" y="0" width="260" height="260" rx="14" fill="#2A1E3D" stroke="#A855F7" stroke-width="1.5"/>
+    <text x="344" y="36" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="12" font-weight="700">PHASE 2: SANDBOX TESTING</text>
+    <text x="344" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Retention &amp; CTR Signals</text>
+    <circle cx="370" cy="115" r="16" fill="#6D28D9"/>
+    <text x="370" y="120" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">1k</text>
+    <text x="400" y="120" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">1,000 Impr Benchmark</text>
+    <circle cx="370" cy="165" r="16" fill="#6D28D9"/>
+    <text x="370" y="170" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">&gt;2%</text>
+    <text x="400" y="170" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">Outbound CTR Target</text>
+    <circle cx="370" cy="215" r="16" fill="#6D28D9"/>
+    <text x="370" y="220" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="11" font-weight="700" text-anchor="middle">35%</text>
+    <text x="400" y="220" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="12">3-Sec Thumbstop Ratio</text>
+
+    <!-- Arrow -->
+    <path d="M595 130H625" stroke="#A855F7" stroke-width="2"/>
+    <path d="M620 125L625 130L620 135" stroke="#A855F7" stroke-width="2"/>
+
+    <!-- Column 3: Scaling -->
+    <rect x="640" y="0" width="220" height="260" rx="14" fill="#221830" stroke="#6D28D9" stroke-opacity="0.4"/>
+    <text x="664" y="36" fill="#A855F7" font-family="system-ui, sans-serif" font-size="12" font-weight="700">PHASE 3: SCALE</text>
+    <text x="664" y="68" fill="#FFFFFF" font-family="system-ui, sans-serif" font-size="16" font-weight="600">Graduation to CBO</text>
+    <rect x="664" y="95" width="172" height="60" rx="8" fill="#6D28D9" fill-opacity="0.3"/>
+    <text x="750" y="125" fill="#FAF9FC" font-family="system-ui, sans-serif" font-size="13" font-weight="700" text-anchor="middle">Scalable Winners</text>
+    <text x="750" y="142" fill="#E9D5FF" font-family="system-ui, sans-serif" font-size="11" text-anchor="middle">Predictable CAC</text>
+    <rect x="664" y="170" width="172" height="60" rx="8" fill="#17121F"/>
+    <text x="750" y="198" fill="#9E94A8" font-family="system-ui, sans-serif" font-size="12" text-anchor="middle">Fatigue Refresh</text>
+    <text x="750" y="216" fill="#A855F7" font-family="system-ui, sans-serif" font-size="10" text-anchor="middle">Every 14 Days</text>
+  </g>
+</svg>
