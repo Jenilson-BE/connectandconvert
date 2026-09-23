@@ -445,13 +445,13 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
           </p>
           <div>
             <a
-              href="https://t.me/connectandconvert"
+              href="https://t.me/connectandconvert_ind"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6D28D9] hover:text-[#5B21B6] transition-colors py-1.5 px-4 rounded-full bg-white border border-[#E8E2EF] shadow-xs hover:border-[#D8B4FE]"
             >
               <Send className="w-3.5 h-3.5 text-[#2AABEE]" />
-              <span>Telegram: @connectandconvert</span>
+              <span>Telegram: @connectandconvert_ind</span>
             </a>
           </div>
 
