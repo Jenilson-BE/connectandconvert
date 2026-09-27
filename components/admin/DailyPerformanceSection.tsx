@@ -16,6 +16,17 @@ type Range = (typeof RANGES)[number];
 
 const LABEL_EVERY: Record<Range, number> = { 7: 1, 30: 5, 90: 10 };
 
+/**
+ * The two bars sit side by side, so the gaps have to shrink as days are added
+ * or the 30/90 day views collapse into an unreadable smear. All values are
+ * literal class names so Tailwind's scanner keeps them.
+ */
+const CHART_DENSITY = {
+  comfortable: { outer: "gap-[6px]", inner: "gap-[3px]" },
+  compact: { outer: "gap-[3px]", inner: "gap-[2px]" },
+  tight: { outer: "gap-[1px]", inner: "gap-px" },
+} as const;
+
 interface DailyPerformanceSectionProps {
   rows: DailyPerformanceRow[];
   slug: string;
@@ -47,6 +58,14 @@ export function DailyPerformanceSection({
     () => visible.reduce((max, row) => Math.max(max, row.landings), 0),
     [visible]
   );
+
+  const maxConversions = React.useMemo(
+    () => visible.reduce((max, row) => Math.max(max, row.conversions), 0),
+    [visible]
+  );
+
+  /** Both series share one scale so the pair stays visually comparable. */
+  const maxValue = Math.max(maxLandings, maxConversions);
 
   const totals = React.useMemo(
     () =>
@@ -105,6 +124,13 @@ export function DailyPerformanceSection({
   const labelEvery = rangeIsExplicit
     ? Math.max(1, Math.ceil(visible.length / 10))
     : LABEL_EVERY[range];
+
+  const density =
+    visible.length <= 10
+      ? CHART_DENSITY.comfortable
+      : visible.length <= 31
+        ? CHART_DENSITY.compact
+        : CHART_DENSITY.tight;
 
   return (
     <div className="mt-8 rounded-3xl bg-white border border-[#E8E2EF] p-6 sm:p-8 shadow-xs print:mt-6 print:rounded-xl print:p-5 print-avoid-break">
@@ -206,37 +232,47 @@ export function DailyPerformanceSection({
 
           {/* Chart: landings vs conversions per day */}
           <div className="p-4 rounded-2xl bg-[#FAF9FC] border border-[#E8E2EF]">
-            <div className="flex items-center gap-4 mb-3">
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#625A6D]">
-                <span className="w-2.5 h-2.5 rounded-sm bg-[#17121F]" /> Landings
-              </span>
-              <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#625A6D]">
-                <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Conversions
-              </span>
+            <div className="flex items-center justify-between gap-4 mb-3">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#625A6D]">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[#17121F]" /> Landings
+                </span>
+                <span className="flex items-center gap-1.5 text-[11px] font-semibold text-[#625A6D]">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-emerald-500" /> Conversions
+                </span>
+              </div>
+              <span className="text-[11px] text-[#9E94A8]">Peak: {maxValue}</span>
             </div>
 
-            <div className="flex items-end gap-[3px] h-36">
+            {/* items-stretch is required: the columns must fill h-36 so the bar
+                area below has a definite height and the percentage heights on
+                each bar resolve. With items-end every bar collapses to 2px. */}
+            <div className={`flex items-stretch h-36 ${density.outer}`}>
               {visible.map((row, index) => {
-                const landingPct = maxLandings > 0 ? (row.landings / maxLandings) * 100 : 0;
-                const conversionPct =
-                  maxLandings > 0 ? (row.conversions / maxLandings) * 100 : 0;
+                const landingPct = maxValue > 0 ? (row.landings / maxValue) * 100 : 0;
+                const conversionPct = maxValue > 0 ? (row.conversions / maxValue) * 100 : 0;
                 const showLabel = index % labelEvery === 0;
 
                 return (
                   <div
                     key={row.date}
-                    className="flex-1 min-w-0 flex flex-col items-center gap-1 group"
+                    className="flex-1 min-w-0 flex flex-col items-center gap-1"
                     title={`${formatFullDayLabel(row.date)} — ${row.landings} landings, ${row.conversions} conversions (${row.conversionRate})`}
                   >
-                    <div className="w-full flex-1 flex items-end justify-center gap-[2px]">
+                    <div
+                      className={`w-full flex-1 flex items-end justify-center ${density.inner}`}
+                    >
                       <div
-                        className="w-1/2 rounded-t-sm bg-[#17121F] min-h-[2px]"
-                        style={{ height: `${Math.max(landingPct, row.landings > 0 ? 2 : 0)}%` }}
+                        className={`w-1/2 rounded-t-sm bg-[#17121F] ${row.landings > 0 ? "min-h-[2px]" : ""}`}
+                        style={{
+                          height: row.landings > 0 ? `${Math.max(landingPct, 2)}%` : "0%",
+                        }}
                       />
                       <div
-                        className="w-1/2 rounded-t-sm bg-emerald-500 min-h-[2px]"
+                        className={`w-1/2 rounded-t-sm bg-emerald-500 ${row.conversions > 0 ? "min-h-[2px]" : ""}`}
                         style={{
-                          height: `${Math.max(conversionPct, row.conversions > 0 ? 2 : 0)}%`,
+                          height:
+                            row.conversions > 0 ? `${Math.max(conversionPct, 2)}%` : "0%",
                         }}
                       />
                     </div>
