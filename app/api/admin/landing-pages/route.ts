@@ -1,6 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAllLandingPages, saveLandingPage } from "@/lib/landing-storage";
+import { revalidatePath } from "next/cache";
+import {
+  getAllLandingPages,
+  saveLandingPage,
+  sanitizeSlug,
+} from "@/lib/landing-storage";
 import { LandingPageConfig } from "@/lib/landing-types";
+import {
+  normalizeMetaPixelId,
+  isValidMetaPixelId,
+  META_PIXEL_ID_ERROR,
+} from "@/lib/meta-pixel-id";
 
 function checkAuth(request: NextRequest): boolean {
   const session = request.cookies.get("cc_admin_session");
@@ -31,17 +41,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Sanitize slug
-    const cleanedSlug = body.slug
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9-_]/g, "-")
-      .replace(/-+/g, "-");
+    const cleanedSlug = sanitizeSlug(body.slug);
+    if (!cleanedSlug) {
+      return NextResponse.json(
+        { success: false, message: "Slug must contain at least one letter or number." },
+        { status: 400 }
+      );
+    }
+
+    const metaPixelId = normalizeMetaPixelId(body.metaPixelId);
+    if (metaPixelId && !isValidMetaPixelId(metaPixelId)) {
+      return NextResponse.json(
+        { success: false, message: META_PIXEL_ID_ERROR },
+        { status: 400 }
+      );
+    }
 
     const saved = await saveLandingPage({
       ...body,
       slug: cleanedSlug,
+      metaPixelId: metaPixelId || undefined,
     });
+
+    revalidatePath(`/lp/${saved.slug}`);
 
     return NextResponse.json({ success: true, page: saved });
   } catch (error) {

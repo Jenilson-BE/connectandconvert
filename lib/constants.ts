@@ -21,11 +21,11 @@ export const SITE_CONFIG = {
   contact: {
     email: "hello@connectandconvert.tech",
     phone: "",
-    telegramUsername: "connectandconvert",
-    telegramUrl: "https://t.me/connectandconvert",
+    telegramUsername: "connectandconvert_ind",
+    telegramUrl: "https://t.me/connectandconvert_ind",
   },
   socials: [
-    { name: "Telegram", href: "https://t.me/connectandconvert" },
+    { name: "Telegram", href: "https://t.me/connectandconvert_ind" },
     { name: "LinkedIn", href: "https://linkedin.com/company/connectandconvert" },
     { name: "Instagram", href: "https://instagram.com/connectandconvert" },
     { name: "X (Twitter)", href: "https://x.com/connectconvert" },

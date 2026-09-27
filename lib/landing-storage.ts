@@ -8,6 +8,7 @@ import {
   DistributionItem,
   AttributionItem,
 } from "./landing-types";
+import { normalizeMetaPixelId, isValidMetaPixelId } from "./meta-pixel-id";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const PAGES_FILE = path.join(DATA_DIR, "landing-pages.json");
@@ -17,6 +18,19 @@ const PAGES_COLLECTION = "landing_pages";
 const LOGS_COLLECTION = "visit_logs";
 
 let indexesCreated = false;
+
+export function sanitizeSlug(slug: unknown): string {
+  if (typeof slug !== "string") return "";
+  return slug
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-_]/g, "-")
+    .replace(/-+/g, "-");
+}
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
 
 async function ensureIndexes() {
   if (indexesCreated) return;
@@ -28,9 +42,15 @@ async function ensureIndexes() {
     await db.collection(LOGS_COLLECTION).createIndex({ slug: 1, ts: -1 });
     await db.collection(LOGS_COLLECTION).createIndex({ type: 1 });
     indexesCreated = true;
-  } catch (err) {
-    // Indexes will be retried on next call
+  } catch {
+    // Indexes are retried on the next call.
   }
+}
+
+function stripId<T extends { _id?: unknown }>(doc: T): Omit<T, "_id"> {
+  const { _id, ...rest } = doc as T & { _id?: unknown };
+  void _id;
+  return rest;
 }
 
 // --------------------------------------------------------------------------
@@ -101,7 +121,7 @@ export async function getAllLandingPages(): Promise<LandingPageConfig[]> {
         .sort({ updatedAt: -1 })
         .toArray();
       // Remove MongoDB internal _id field
-      const cleanDocs = docs.map(({ _id, ...rest }: any) => rest as LandingPageConfig);
+      const cleanDocs = docs.map((d) => stripId(d) as LandingPageConfig);
       // Sync to file mirror
       saveFileLandingPages(cleanDocs);
       return cleanDocs;
@@ -121,10 +141,9 @@ export async function getLandingPageBySlug(slug: string): Promise<LandingPageCon
       await ensureIndexes();
       const doc = await db
         .collection<LandingPageConfig>(PAGES_COLLECTION)
-        .findOne({ slug: { $regex: new RegExp(`^${slug}$`, "i") } });
+        .findOne({ slug: { $regex: new RegExp(`^${escapeRegExp(slug)}$`, "i") } });
       if (doc) {
-        const { _id, ...rest } = doc as any;
-        return rest as LandingPageConfig;
+        return stripId(doc) as LandingPageConfig;
       }
     }
   } catch (err) {
@@ -145,8 +164,7 @@ export async function getLandingPageById(id: string): Promise<LandingPageConfig 
         .collection<LandingPageConfig>(PAGES_COLLECTION)
         .findOne({ id });
       if (doc) {
-        const { _id, ...rest } = doc as any;
-        return rest as LandingPageConfig;
+        return stripId(doc) as LandingPageConfig;
       }
     }
   } catch (err) {
@@ -160,7 +178,8 @@ export async function getLandingPageById(id: string): Promise<LandingPageConfig 
 export async function saveLandingPage(page: LandingPageConfig): Promise<LandingPageConfig> {
   const now = new Date().toISOString();
   const pageId = page.id || `lp-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
-  const cleanSlug = (page.slug || "").trim().toLowerCase();
+  const cleanSlug = sanitizeSlug(page.slug);
+  const pixelId = normalizeMetaPixelId(page.metaPixelId);
 
   const preparedPage: LandingPageConfig = {
     ...page,
@@ -168,6 +187,7 @@ export async function saveLandingPage(page: LandingPageConfig): Promise<LandingP
     slug: cleanSlug,
     updatedAt: now,
     createdAt: page.createdAt || now,
+    metaPixelId: isValidMetaPixelId(pixelId) ? pixelId : undefined,
     visits: Number(page.visits) || 0,
     clicks: Number(page.clicks) || 0,
     subscribes: Number(page.subscribes) || 0,
@@ -317,7 +337,7 @@ export async function getRecentVisitLogs(limit = 50): Promise<VisitLogEntry[]> {
         .sort({ ts: -1 })
         .limit(limit)
         .toArray();
-      return docs.map(({ _id, ...rest }: any) => rest as VisitLogEntry);
+      return docs.map((d) => stripId(d) as VisitLogEntry);
     }
   } catch (err) {
     console.warn("MongoDB getRecentVisitLogs fallback to file:", err);
@@ -344,7 +364,7 @@ export async function getPageReport(slug: string): Promise<PageAnalyticsReport |
         .sort({ ts: -1 })
         .limit(1000)
         .toArray();
-      pageLogs = docs.map(({ _id, ...rest }: any) => rest as VisitLogEntry);
+      pageLogs = docs.map((d) => stripId(d) as VisitLogEntry);
     }
   } catch (err) {
     console.warn("MongoDB getPageReport fallback to file logs:", err);

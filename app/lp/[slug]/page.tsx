@@ -6,7 +6,7 @@ import { SITE_CONFIG } from "@/lib/constants";
 
 export async function generateStaticParams() {
   const pages = await getAllLandingPages();
-  return pages.map((p) => ({ slug: p.slug }));
+  return pages.filter((p) => p.status === "published").map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({
@@ -52,7 +52,7 @@ export default async function DynamicLandingPage({
   const { slug } = await params;
   const page = await getLandingPageBySlug(slug);
 
-  if (!page) {
+  if (!page || page.status !== "published") {
     notFound();
   }
 

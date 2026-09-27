@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { SITE_CONFIG } from "@/lib/constants";
 
 const serverContactSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
@@ -133,7 +134,7 @@ Additional Context: ${data.additionalMessage || "None"}
     return NextResponse.json(
       {
         success: false,
-        message: "Internal server error while processing your inquiry. Please try again or reach out on Telegram (@connectandconvert).",
+        message: `Internal server error while processing your inquiry. Please try again or reach out on Telegram (@${SITE_CONFIG.contact.telegramUsername}).`,
       },
       { status: 500 }
     );

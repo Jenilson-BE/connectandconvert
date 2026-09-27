@@ -31,8 +31,10 @@ export function trackCtaClick(ctaLocation: string, label = "Community Join"): vo
 }
 
 export function trackAutoRedirect(): void {
-  trackEventOnce("auto_redirect", { cta_location: "countdown" });
-  trackPixelEvent("AutoCommunityRedirect");
+  if (firedEvents.has("auto_redirect")) return;
+  firedEvents.add("auto_redirect");
+  trackEvent("auto_redirect", { cta_location: "countdown" });
+  trackPixelStandard("AutoCommunityRedirect");
 }
 
 export function trackEngagement(milestone: string): void {

@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Crown, Send, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 import { LandingPageConfig } from "@/lib/landing-types";
-import { initMetaPixel } from "@/lib/landing-engine/meta-pixel";
+import { initMetaPixel, getMetaPixelNoScriptUrl } from "@/lib/landing-engine/meta-pixel";
 import { captureAttribution } from "@/lib/landing-engine/attribution";
 import {
   trackLandingView,
@@ -26,6 +26,7 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
   const [stickyVisible, setStickyVisible] = React.useState(false);
   const [countdownStarted, setCountdownStarted] = React.useState(!page.startOnFirstScroll);
   const [remaining, setRemaining] = React.useState(totalSeconds);
+  const remainingRef = React.useRef(totalSeconds);
   const intervalRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
   const countdownCancelledRef = React.useRef(false);
   const toastTimeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -68,7 +69,11 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
 
   // Initialize tracking
   React.useEffect(() => {
-    initMetaPixel(page.metaPixelId);
+    if (!initMetaPixel(page.metaPixelId) && page.metaPixelId) {
+      console.warn(
+        `[landing] Meta Pixel ID "${page.metaPixelId}" is not a valid 15-16 digit ID; pixel events are disabled for this page.`
+      );
+    }
     captureAttribution();
     sendVisitLog("websitevisit", page.slug);
     trackLandingView(page.title);
@@ -106,7 +111,11 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
       observer?.disconnect();
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
     };
-  }, [page]);
+  }, [
+    page.metaPixelId,
+    page.slug,
+    page.title,
+  ]);
 
   // First scroll countdown start (if configured)
   React.useEffect(() => {
@@ -127,19 +136,23 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
   React.useEffect(() => {
     if (!page.autoRedirect || !countdownStarted) return;
 
-    intervalRef.current = setInterval(() => {
-      setRemaining((prev) => {
-        if (prev <= 1) {
-          clearCountdown();
-          if (!countdownCancelledRef.current) {
-            handleCtaClick("auto_timer", true);
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    const tick = () => {
+      if (countdownCancelledRef.current) {
+        clearCountdown();
+        return;
+      }
+      if (remainingRef.current <= 1) {
+        clearCountdown();
+        remainingRef.current = 0;
+        setRemaining(0);
+        handleCtaClick("auto_timer", true);
+        return;
+      }
+      remainingRef.current -= 1;
+      setRemaining(remainingRef.current);
+    };
 
+    intervalRef.current = setInterval(tick, 1000);
     return clearCountdown;
   }, [page.autoRedirect, countdownStarted, clearCountdown, handleCtaClick]);
 
@@ -189,9 +202,23 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
   };
 
   const currentTheme = accents[page.themeAccent] || accents.violet;
+  const noScriptPixelUrl = getMetaPixelNoScriptUrl(page.metaPixelId);
 
   return (
     <div className="relative min-h-[100svh] overflow-hidden bg-[#FAF9FC] text-[#17121F] selection:bg-[#E9D5FF] selection:text-[#17121F]">
+      {noScriptPixelUrl && (
+        <noscript>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={noScriptPixelUrl}
+            alt=""
+            width={1}
+            height={1}
+            style={{ display: "none" }}
+          />
+        </noscript>
+      )}
+
       {/* Background ambient lighting */}
       <div aria-hidden="true" className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute inset-0 opacity-[0.35] [background-image:radial-gradient(circle,rgba(109,40,217,0.08)_1px,transparent_1px)] [background-size:32px_32px]" />

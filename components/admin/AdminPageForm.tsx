@@ -16,8 +16,14 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  type LucideIcon,
 } from "lucide-react";
 import { LandingPageConfig, ThemeAccent } from "@/lib/landing-types";
+import {
+  normalizeMetaPixelId,
+  isValidMetaPixelId,
+  META_PIXEL_ID_ERROR,
+} from "@/lib/meta-pixel-id";
 import { Button } from "@/components/ui/Button";
 
 interface AdminPageFormProps {
@@ -25,9 +31,29 @@ interface AdminPageFormProps {
   isEditing?: boolean;
 }
 
+type FormTabId = "basic" | "copy" | "cta" | "timer" | "stats" | "tracking";
+
+const FORM_TABS: { id: FormTabId; label: string; icon: LucideIcon }[] = [
+  { id: "basic", label: "URL & SEO", icon: Link2 },
+  { id: "copy", label: "Branding & Copy", icon: Sparkles },
+  { id: "cta", label: "Destination CTA", icon: Save },
+  { id: "timer", label: "Countdown Timer", icon: Clock },
+  { id: "stats", label: "Stats & Legal", icon: ShieldCheck },
+  { id: "tracking", label: "Pixels & Theme", icon: Palette },
+];
+
+const THEMES: { id: ThemeAccent; label: string; bg: string }[] = [
+  { id: "violet", label: "Violet Luxury", bg: "bg-[#7C3AED]" },
+  { id: "purple", label: "Royal Purple", bg: "bg-[#9333EA]" },
+  { id: "emerald", label: "Emerald Wealth", bg: "bg-[#059669]" },
+  { id: "blue", label: "Cobalt Blue", bg: "bg-[#2563EB]" },
+  { id: "rose", label: "Rose Ruby", bg: "bg-[#E11D48]" },
+  { id: "amber", label: "Amber Gold", bg: "bg-[#D97706]" },
+];
+
 export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormProps) {
   const router = useRouter();
-  const [activeTab, setActiveTab] = React.useState<"basic" | "copy" | "cta" | "timer" | "stats" | "tracking">("basic");
+  const [activeTab, setActiveTab] = React.useState<FormTabId>("basic");
   const [saving, setSaving] = React.useState(false);
   const [errorMsg, setErrorMsg] = React.useState("");
   const [successMsg, setSuccessMsg] = React.useState("");
@@ -77,9 +103,12 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
     themeAccent: (initialData?.themeAccent as ThemeAccent) || "violet",
   });
 
-  const handleChange = (field: keyof LandingPageConfig, value: any) => {
+  function handleChange<K extends keyof LandingPageConfig>(
+    field: K,
+    value: LandingPageConfig[K]
+  ) {
     setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  }
 
   const handleStatChange = (statField: "members" | "access" | "pricing" | "content", value: string) => {
     setFormData((prev) => ({
@@ -88,8 +117,12 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const rawPixelId = formData.metaPixelId?.trim() || "";
+  const normalizedPixelId = normalizeMetaPixelId(formData.metaPixelId);
+  const pixelConfigured = isValidMetaPixelId(normalizedPixelId);
+  const pixelInvalid = rawPixelId.length > 0 && !pixelConfigured;
+
+  const savePage = async (status: LandingPageConfig["status"]) => {
     setSaving(true);
     setErrorMsg("");
     setSuccessMsg("");
@@ -106,6 +139,22 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
       return;
     }
 
+    if (pixelInvalid) {
+      setErrorMsg(META_PIXEL_ID_ERROR);
+      setSaving(false);
+      return;
+    }
+
+    const {
+      visits: _visits,
+      clicks: _clicks,
+      subscribes: _subscribes,
+      autoredirects: _autoredirects,
+      createdAt: _createdAt,
+      updatedAt: _updatedAt,
+      ...rest
+    } = formData;
+
     try {
       const url = isEditing
         ? `/api/admin/landing-pages/${formData.id}`
@@ -115,7 +164,11 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...rest,
+          status,
+          metaPixelId: normalizedPixelId || "",
+        }),
       });
 
       const data = await res.json();
@@ -123,26 +176,26 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
         throw new Error(data.message || "Failed to save landing page.");
       }
 
-      setSuccessMsg("Landing page saved successfully!");
+      setSuccessMsg(
+        status === "published"
+          ? "Landing page saved and published."
+          : "Landing page saved as draft."
+      );
       setTimeout(() => {
         router.push("/admin");
         router.refresh();
       }, 800);
-    } catch (err: any) {
-      setErrorMsg(err.message || "Something went wrong.");
+    } catch (err) {
+      setErrorMsg(err instanceof Error ? err.message : "Something went wrong.");
     } finally {
       setSaving(false);
     }
   };
 
-  const THEMES: { id: ThemeAccent; label: string; bg: string }[] = [
-    { id: "violet", label: "Violet Luxury", bg: "bg-[#7C3AED]" },
-    { id: "purple", label: "Royal Purple", bg: "bg-[#9333EA]" },
-    { id: "emerald", label: "Emerald Wealth", bg: "bg-[#059669]" },
-    { id: "blue", label: "Cobalt Blue", bg: "bg-[#2563EB]" },
-    { id: "rose", label: "Rose Ruby", bg: "bg-[#E11D48]" },
-    { id: "amber", label: "Amber Gold", bg: "bg-[#D97706]" },
-  ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await savePage(formData.status);
+  };
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-16">
@@ -181,7 +234,7 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
             type="button"
             variant="primary"
             size="md"
-            onClick={handleSubmit}
+            onClick={() => savePage(formData.status)}
             disabled={saving}
           >
             {saving ? (
@@ -215,21 +268,14 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
 
       {/* Tabs navigation */}
       <div className="flex flex-wrap gap-2 p-1.5 bg-white rounded-2xl border border-[#E8E2EF]">
-        {[
-          { id: "basic", label: "URL & SEO", icon: Link2 },
-          { id: "copy", label: "Branding & Copy", icon: Sparkles },
-          { id: "cta", label: "Destination CTA", icon: Save },
-          { id: "timer", label: "Countdown Timer", icon: Clock },
-          { id: "stats", label: "Stats & Legal", icon: ShieldCheck },
-          { id: "tracking", label: "Pixels & Theme", icon: Palette },
-        ].map((tab) => {
+        {FORM_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
                 isActive
                   ? "bg-[#6D28D9] text-white shadow-xs"
@@ -281,7 +327,9 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
                 </label>
                 <select
                   value={formData.status}
-                  onChange={(e) => handleChange("status", e.target.value)}
+                  onChange={(e) =>
+                    handleChange("status", e.target.value as LandingPageConfig["status"])
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
                 >
                   <option value="published">Published (Active)</option>
@@ -674,19 +722,54 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
             </h2>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
-                Meta (Facebook) Pixel ID (Optional)
+              <label
+                htmlFor="metaPixelId"
+                className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2"
+              >
+                Meta (Facebook) Pixel ID
               </label>
               <input
+                id="metaPixelId"
+                name="metaPixelId"
                 type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                pattern="[0-9]{15,16}"
+                maxLength={16}
                 placeholder="e.g. 1234567890123456"
                 value={formData.metaPixelId}
-                onChange={(e) => handleChange("metaPixelId", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
+                onChange={(e) => handleChange("metaPixelId", e.target.value.replace(/\D/g, ""))}
+                aria-invalid={pixelInvalid}
+                aria-describedby="metaPixelId-help"
+                className={`w-full px-4 py-3 rounded-xl border text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 ${
+                  pixelInvalid
+                    ? "border-[#EF4444] focus:ring-[#EF4444]"
+                    : "border-[#E8E2EF] focus:ring-[#6D28D9]"
+                }`}
               />
-              <p className="mt-1 text-[11px] text-[#625A6D]">
-                Fires PageView, ViewContent, and Subscribe events for this specific page.
+              <p id="metaPixelId-help" className="mt-1 text-[11px] text-[#625A6D]">
+                {pixelInvalid
+                  ? META_PIXEL_ID_ERROR
+                  : "15-16 digits from Events Manager. This is the only source of a pixel for this page — there is no site-wide default. Fires PageView, ViewContent, Subscribe, AutoCommunityRedirect, and scroll-depth events."}
               </p>
+              <div
+                className={`mt-3 flex items-start gap-2 p-3 rounded-xl border text-[11px] ${
+                  pixelConfigured
+                    ? "bg-[#ECFDF5] border-[#A7F3D0] text-[#065F46]"
+                    : "bg-[#FFFBEB] border-[#FDE68A] text-[#92400E]"
+                }`}
+              >
+                {pixelConfigured ? (
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                )}
+                <span>
+                  {pixelConfigured
+                    ? `Pixel active on this page (ID ending ${normalizedPixelId.slice(-4)}). Meta events will fire on /lp/${formData.slug || "your-slug"}.`
+                    : "No pixel configured. This page will still log visits and clicks in the dashboard, but no events reach Meta Ads Manager."}
+                </span>
+              </div>
             </div>
 
             <div>
@@ -731,10 +814,7 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
               type="button"
               variant="secondary"
               size="md"
-              onClick={() => {
-                handleChange("status", "draft");
-                setTimeout(handleSubmit as any, 100);
-              }}
+              onClick={() => savePage("draft")}
               disabled={saving}
             >
               Save as Draft

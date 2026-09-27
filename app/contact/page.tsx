@@ -60,12 +60,12 @@ export default function ContactPage() {
                   <div>
                     <span className="text-xs text-[#625A6D] block">Telegram Channel &amp; Chat</span>
                     <a
-                      href="https://t.me/connectandconvert"
+                      href={SITE_CONFIG.contact.telegramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="font-semibold text-[#17121F] hover:text-[#0284C7] transition-colors"
                     >
-                      @connectandconvert
+                      @{SITE_CONFIG.contact.telegramUsername}
                     </a>
                   </div>
                 </div>

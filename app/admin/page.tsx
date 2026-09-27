@@ -43,25 +43,7 @@ export default function AdminDashboardPage() {
   const [copiedSlug, setCopiedSlug] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<"pages" | "logs">("pages");
 
-  // Check auth on load
-  const checkAuthStatus = React.useCallback(async () => {
-    try {
-      const res = await fetch("/api/admin/auth");
-      const data = await res.json();
-      setIsAuthenticated(data.authenticated);
-      if (data.authenticated) {
-        fetchDashboardData();
-      }
-    } catch {
-      setIsAuthenticated(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    checkAuthStatus();
-  }, [checkAuthStatus]);
-
-  const fetchDashboardData = async () => {
+  async function fetchDashboardData() {
     setLoading(true);
     try {
       const [pagesRes, statsRes] = await Promise.all([
@@ -74,6 +56,8 @@ export default function AdminDashboardPage() {
 
       if (pagesData.success) {
         setPages(pagesData.pages);
+      } else if (pagesRes.status === 401) {
+        setIsAuthenticated(false);
       }
       if (statsData.success) {
         setStats(statsData.stats);
@@ -84,7 +68,25 @@ export default function AdminDashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+
+  // Check auth on load
+  const checkAuthStatus = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/auth");
+      const data = await res.json();
+      setIsAuthenticated(data.authenticated);
+      if (data.authenticated) {
+        await fetchDashboardData();
+      }
+    } catch {
+      setIsAuthenticated(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    checkAuthStatus();
+  }, [checkAuthStatus]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
