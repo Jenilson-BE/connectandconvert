@@ -104,10 +104,29 @@ export interface AttributionItem {
   percentage: string;
 }
 
+export interface DailyPerformanceRow {
+  date: string;
+  landings: number;
+  subscribes: number;
+  autoredirects: number;
+  conversions: number;
+  conversionRate: string;
+}
+
+export interface ReportDateRange {
+  /** Inclusive IST day key, or null for "since the beginning". */
+  from: string | null;
+  /** Inclusive IST day key, or null for "up to today". */
+  to: string | null;
+}
+
 export interface PageAnalyticsReport {
   page: LandingPageConfig;
   generatedAt: string;
+  /** The window this report was computed for. Both null means all-time. */
+  appliedRange: ReportDateRange;
   metrics: PageAnalyticsMetrics;
+  dailyBreakdown: DailyPerformanceRow[];
   deviceBreakdown: DistributionItem[];
   browserBreakdown: DistributionItem[];
   osBreakdown: DistributionItem[];

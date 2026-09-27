@@ -7,7 +7,18 @@ import {
   PageAnalyticsReport,
   DistributionItem,
   AttributionItem,
+  DailyPerformanceRow,
 } from "./landing-types";
+import {
+  IST_TIME_ZONE,
+  DAILY_REPORT_MAX_DAYS,
+  buildDailyRows,
+  fillMissingDays,
+  finalizeDailyRow,
+  getIstRangeStartDayKey,
+  istDayKeyToUtcStartIso,
+  resolveReportRange,
+} from "./landing-analytics/daily";
 import { normalizeMetaPixelId, isValidMetaPixelId } from "./meta-pixel-id";
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -347,10 +358,177 @@ export async function getRecentVisitLogs(limit = 50): Promise<VisitLogEntry[]> {
   return logs.slice(0, limit);
 }
 
-export async function getPageReport(slug: string): Promise<PageAnalyticsReport | null> {
+export interface GetPageReportOptions {
+  /** Inclusive IST day key, or null/undefined for "since the beginning". */
+  from?: string | null;
+  /** Inclusive IST day key, or null/undefined for "up to today". */
+  to?: string | null;
+  /** Rolling window used for the day-wise series when no explicit range is set. */
+  days?: number;
+}
+
+interface EventCounts {
+  landings: number;
+  subscribes: number;
+  autoredirects: number;
+}
+
+function buildLogQuery(
+  cleanSlug: string,
+  fromIso: string | null,
+  toIso: string | null
+): Record<string, unknown> {
+  if (!fromIso && !toIso) return { slug: cleanSlug };
+  const ts: Record<string, string> = {};
+  if (fromIso) ts.$gte = fromIso;
+  if (toIso) ts.$lt = toIso;
+  return { slug: cleanSlug, ts };
+}
+
+/**
+ * Exact per-type event totals for a window.
+ *
+ * The report's headline metrics must not be capped by the raw-log read limit,
+ * so they are counted by the database rather than derived in memory.
+ */
+async function getEventCounts(
+  cleanSlug: string,
+  fromIso: string | null,
+  toIso: string | null
+): Promise<EventCounts> {
+  const empty: EventCounts = { landings: 0, subscribes: 0, autoredirects: 0 };
+
+  try {
+    const db = await getDb();
+    if (db) {
+      await ensureIndexes();
+      const [row] = await db
+        .collection(LOGS_COLLECTION)
+        .aggregate<{ landings: number; subscribes: number; autoredirects: number }>([
+          { $match: buildLogQuery(cleanSlug, fromIso, toIso) },
+          {
+            $group: {
+              _id: null,
+              landings: { $sum: { $cond: [{ $eq: ["$type", "websitevisit"] }, 1, 0] } },
+              subscribes: { $sum: { $cond: [{ $eq: ["$type", "subscribe"] }, 1, 0] } },
+              autoredirects: { $sum: { $cond: [{ $eq: ["$type", "autoredirect"] }, 1, 0] } },
+            },
+          },
+        ])
+        .toArray();
+
+      if (!row) return empty;
+      return {
+        landings: row.landings || 0,
+        subscribes: row.subscribes || 0,
+        autoredirects: row.autoredirects || 0,
+      };
+    }
+  } catch (err) {
+    console.warn("MongoDB getEventCounts fallback to file:", err);
+  }
+
+  return getFileVisitLogs()
+    .filter((l) => l.slug.toLowerCase() === cleanSlug)
+    .filter((l) => {
+      if (fromIso && l.ts < fromIso) return false;
+      if (toIso && l.ts >= toIso) return false;
+      return true;
+    })
+    .reduce<EventCounts>(
+      (acc, l) => {
+        if (l.type === "websitevisit") acc.landings += 1;
+        else if (l.type === "subscribe") acc.subscribes += 1;
+        else if (l.type === "autoredirect") acc.autoredirects += 1;
+        return acc;
+      },
+      { ...empty }
+    );
+}
+
+export async function getDailyBreakdown(
+  slug: string,
+  options: GetPageReportOptions = {}
+): Promise<DailyPerformanceRow[]> {
+  const cleanSlug = slug.toLowerCase();
+  const range = resolveReportRange(options.from, options.to);
+  const fromIso = range.active
+    ? range.fromIso
+    : istDayKeyToUtcStartIso(getIstRangeStartDayKey(options.days ?? DAILY_REPORT_MAX_DAYS));
+  const toIso = range.active ? range.toIso : null;
+  const match = buildLogQuery(cleanSlug, fromIso, toIso);
+
+  try {
+    const db = await getDb();
+    if (db) {
+      await ensureIndexes();
+      // `ts` is persisted as a UTC ISO string (not a BSON date), so the range
+      // bound must be a string and the day key is derived after parsing.
+      const rows = await db
+        .collection(LOGS_COLLECTION)
+        .aggregate<{
+          _id: string;
+          landings: number;
+          subscribes: number;
+          autoredirects: number;
+        }>([
+          { $match: match },
+          {
+            $group: {
+              _id: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: { $dateFromString: { dateString: "$ts" } },
+                  timezone: IST_TIME_ZONE,
+                },
+              },
+              landings: {
+                $sum: { $cond: [{ $eq: ["$type", "websitevisit"] }, 1, 0] },
+              },
+              subscribes: {
+                $sum: { $cond: [{ $eq: ["$type", "subscribe"] }, 1, 0] },
+              },
+              autoredirects: {
+                $sum: { $cond: [{ $eq: ["$type", "autoredirect"] }, 1, 0] },
+              },
+            },
+          },
+          { $sort: { _id: 1 } },
+        ])
+        .toArray();
+
+      return rows.map((row) =>
+        finalizeDailyRow({
+          date: row._id,
+          landings: row.landings,
+          subscribes: row.subscribes,
+          autoredirects: row.autoredirects,
+        })
+      );
+    }
+  } catch (err) {
+    console.warn("MongoDB getDailyBreakdown fallback to file:", err);
+  }
+
+  const logs = getFileVisitLogs().filter((l) => l.slug.toLowerCase() === cleanSlug);
+  const rows = buildDailyRows(logs, fromIso ?? undefined);
+  if (range.active && range.from && range.to) {
+    return fillMissingDays(rows, range.from, range.to);
+  }
+  return rows;
+}
+
+export async function getPageReport(
+  slug: string,
+  options: GetPageReportOptions = {}
+): Promise<PageAnalyticsReport | null> {
   const cleanSlug = slug.toLowerCase();
   const page = await getLandingPageBySlug(cleanSlug);
   if (!page) return null;
+
+  const range = resolveReportRange(options.from, options.to);
+  const fromIso = range.active ? range.fromIso : null;
+  const toIso = range.active ? range.toIso : null;
 
   let pageLogs: VisitLogEntry[] = [];
 
@@ -360,7 +538,7 @@ export async function getPageReport(slug: string): Promise<PageAnalyticsReport |
       await ensureIndexes();
       const docs = await db
         .collection<VisitLogEntry>(LOGS_COLLECTION)
-        .find({ slug: cleanSlug })
+        .find(buildLogQuery(cleanSlug, fromIso, toIso))
         .sort({ ts: -1 })
         .limit(1000)
         .toArray();
@@ -375,14 +553,37 @@ export async function getPageReport(slug: string): Promise<PageAnalyticsReport |
     pageLogs = allLogs.filter((l) => l.slug.toLowerCase() === cleanSlug);
   }
 
+  // Trim the file mirror to the requested window as well.
+  if (range.active) {
+    pageLogs = pageLogs.filter((l) => {
+      if (fromIso && l.ts < fromIso) return false;
+      if (toIso && l.ts >= toIso) return false;
+      return true;
+    });
+  }
+
   // Compute metrics
   const logLandings = pageLogs.filter((l) => l.type === "websitevisit").length;
   const logSubscribes = pageLogs.filter((l) => l.type === "subscribe").length;
   const logAutoredirects = pageLogs.filter((l) => l.type === "autoredirect").length;
 
-  const totalLanding = Math.max(page.visits || 0, logLandings);
-  const totalSubscribe = Math.max(page.subscribes || 0, logSubscribes);
-  const totalAutoredirect = Math.max(page.autoredirects || 0, logAutoredirects);
+  let totalLanding: number;
+  let totalSubscribe: number;
+  let totalAutoredirect: number;
+
+  if (range.active) {
+    // The lifetime counters on the page carry no dates, so they cannot answer
+    // "how many on this day". Count exactly, with no raw-log cap.
+    const counts = await getEventCounts(cleanSlug, fromIso, toIso);
+    totalLanding = counts.landings;
+    totalSubscribe = counts.subscribes;
+    totalAutoredirect = counts.autoredirects;
+  } else {
+    totalLanding = Math.max(page.visits || 0, logLandings);
+    totalSubscribe = Math.max(page.subscribes || 0, logSubscribes);
+    totalAutoredirect = Math.max(page.autoredirects || 0, logAutoredirects);
+  }
+
   const totalConversions = totalSubscribe + totalAutoredirect;
 
   const subscribeCtr =
@@ -439,6 +640,7 @@ export async function getPageReport(slug: string): Promise<PageAnalyticsReport |
   return {
     page,
     generatedAt: new Date().toISOString(),
+    appliedRange: { from: range.from, to: range.to },
     metrics: {
       totalLanding,
       totalSubscribe,
@@ -452,6 +654,7 @@ export async function getPageReport(slug: string): Promise<PageAnalyticsReport |
     browserBreakdown,
     osBreakdown,
     attributionBreakdown,
+    dailyBreakdown: await getDailyBreakdown(cleanSlug, options),
     recentLogs: pageLogs.slice(0, 100),
   };
 }

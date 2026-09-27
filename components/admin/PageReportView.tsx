@@ -20,8 +20,13 @@ import {
   CheckCircle2,
   Sparkles,
   RefreshCw,
+  CalendarRange,
 } from "lucide-react";
 import { PageAnalyticsReport } from "@/lib/landing-types";
+import { DailyPerformanceSection } from "@/components/admin/DailyPerformanceSection";
+import { ReportDateRangePicker } from "@/components/admin/ReportDateRangePicker";
+import { formatFullDayLabel } from "@/lib/landing-analytics/daily";
+import { SITE_CONFIG } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 
 interface PageReportViewProps {
@@ -32,18 +37,52 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
   const [report, setReport] = React.useState<PageAnalyticsReport>(initialReport);
   const [refreshing, setRefreshing] = React.useState(false);
 
-  const { page, metrics, deviceBreakdown, browserBreakdown, osBreakdown, attributionBreakdown, recentLogs } = report;
+  const { page, metrics, deviceBreakdown, browserBreakdown, osBreakdown, attributionBreakdown, dailyBreakdown, recentLogs } = report;
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      const res = await fetch(`/api/admin/report/${page.slug}`);
+      // Preserve the currently applied period, otherwise refreshing would
+      // silently jump back to all time.
+      const { from, to } = report.appliedRange;
+      const params = new URLSearchParams();
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
+      const query = params.toString();
+
+      const res = await fetch(`/api/admin/report/${page.slug}${query ? `?${query}` : ""}`);
       const data = await res.json();
       if (data.success && data.report) {
         setReport(data.report);
       }
     } catch (err) {
       console.error("Failed to refresh report:", err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleApplyRange = async (range: { from: string | null; to: string | null }) => {
+    setRefreshing(true);
+    try {
+      const params = new URLSearchParams();
+      if (range.from) params.set("from", range.from);
+      if (range.to) params.set("to", range.to);
+      const query = params.toString();
+
+      const res = await fetch(`/api/admin/report/${page.slug}${query ? `?${query}` : ""}`);
+      const data = await res.json();
+      if (data.success && data.report) {
+        setReport(data.report);
+        // Keep the address bar shareable without a full navigation.
+        window.history.replaceState(
+          null,
+          "",
+          query ? `${window.location.pathname}?${query}` : window.location.pathname
+        );
+      }
+    } catch (err) {
+      console.error("Failed to apply reporting period:", err);
     } finally {
       setRefreshing(false);
     }
@@ -77,9 +116,13 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
 
     const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
+    const rangeSuffix =
+      report.appliedRange.from || report.appliedRange.to
+        ? `-${report.appliedRange.from ?? "start"}-to-${report.appliedRange.to ?? "today"}`
+        : "";
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `cc-report-${page.slug}-${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `cc-report-${page.slug}${rangeSuffix}-${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -89,6 +132,15 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
     dateStyle: "medium",
     timeStyle: "short",
   });
+
+  const periodLabel =
+    report.appliedRange.from === null && report.appliedRange.to === null
+      ? "All time"
+      : report.appliedRange.from === report.appliedRange.to
+        ? formatFullDayLabel(report.appliedRange.from as string)
+        : `${report.appliedRange.from ? formatFullDayLabel(report.appliedRange.from) : "Start"} – ${
+            report.appliedRange.to ? formatFullDayLabel(report.appliedRange.to) : "Today"
+          }`;
 
   return (
     <div className="min-h-screen bg-[#FAF9FC] text-[#17121F] pb-24 print:bg-white print:p-0 print:pb-0">
@@ -197,6 +249,10 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
                 <Calendar className="w-3.5 h-3.5 text-[#6D28D9]" />
                 <span>Generated: <strong>{formattedDate}</strong></span>
               </p>
+              <p className="text-xs text-[#625A6D] flex items-center sm:justify-end gap-1.5">
+                <CalendarRange className="w-3.5 h-3.5 text-[#6D28D9]" />
+                <span>Reporting period: <strong>{periodLabel}</strong> (IST)</span>
+              </p>
             </div>
           </div>
 
@@ -237,7 +293,19 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
         </div>
 
         {/* ==================================================================== */}
-        {/* 3. 4 CORE METRICS CARDS (Total Landing, Subscribe, Autoredirect, CTR) */}
+        {/* 3. REPORTING PERIOD FILTER                                        */}
+        {/* ==================================================================== */}
+        <div className="mt-6">
+          <ReportDateRangePicker
+            key={`${report.appliedRange.from ?? "all"}-${report.appliedRange.to ?? "all"}`}
+            appliedRange={report.appliedRange}
+            loading={refreshing}
+            onApply={handleApplyRange}
+          />
+        </div>
+
+        {/* ==================================================================== */}
+        {/* 4. 4 CORE METRICS CARDS (Total Landing, Subscribe, Autoredirect, CTR) */}
         {/* ==================================================================== */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:mt-6 print:grid-cols-4 print:gap-3 print-avoid-break">
           {/* Card 1: Total Landing */}
@@ -373,7 +441,16 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
         </div>
 
         {/* ==================================================================== */}
-        {/* 5. ATTRIBUTION & DEVICE BREAKDOWN GRID                              */}
+        {/* 5. DAY-WISE PERFORMANCE (IST BUSINESS DAY)                         */}
+        {/* ==================================================================== */}
+        <DailyPerformanceSection
+          rows={dailyBreakdown}
+          slug={page.slug}
+          appliedRange={report.appliedRange}
+        />
+
+        {/* ==================================================================== */}
+        {/* 6. ATTRIBUTION & DEVICE BREAKDOWN GRID                              */}
         {/* ==================================================================== */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 print:mt-6 print:grid-cols-12 print:gap-4 print-avoid-break">
           {/* Attribution Breakdown (7 cols) */}
@@ -546,10 +623,11 @@ export function PageReportView({ report: initialReport }: PageReportViewProps) {
             CONFIDENTIAL &bull; CONNECT &amp; CONVERT DIGITAL MARKETING AGENCY
           </p>
           <p className="text-[11px] text-[#625A6D]">
-            Official Agency Website: <a href="https://connectandconvert.tech" className="text-[#6D28D9]">https://connectandconvert.tech</a> &bull; Telegram: <a href="https://t.me/connectandconvert" className="text-[#6D28D9]">@connectandconvert</a>
+            Official Agency Website: <a href="https://connectandconvert.tech" className="text-[#6D28D9]">https://connectandconvert.tech</a> &bull; Telegram: <a href={SITE_CONFIG.contact.telegramUrl} className="text-[#6D28D9]">@{SITE_CONFIG.contact.telegramUsername}</a>
           </p>
           <p className="text-[10px] text-[#9E94A8]">
-            This performance intelligence report contains proprietary attribution and conversion metrics generated on {formattedDate}. All rights reserved.
+            This performance intelligence report covers {periodLabel} (IST) and contains proprietary
+            attribution and conversion metrics generated on {formattedDate}. All rights reserved.
           </p>
         </div>
       </div>

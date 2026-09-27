@@ -18,7 +18,9 @@ export async function GET(
   }
 
   const { slug } = await context.params;
-  const report = await getPageReport(slug);
+  const from = request.nextUrl.searchParams.get("from");
+  const to = request.nextUrl.searchParams.get("to");
+  const report = await getPageReport(slug, { from, to });
 
   if (!report) {
     return NextResponse.json(

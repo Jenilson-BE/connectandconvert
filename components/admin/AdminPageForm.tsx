@@ -24,6 +24,7 @@ import {
   isValidMetaPixelId,
   META_PIXEL_ID_ERROR,
 } from "@/lib/meta-pixel-id";
+import { SITE_CONFIG } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
 
 interface AdminPageFormProps {
@@ -82,7 +83,7 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
 
     ctaText: initialData?.ctaText || "JOIN NOW ON TELEGRAM",
     ctaSubtext: initialData?.ctaSubtext || "Instant access to private community",
-    destinationUrl: initialData?.destinationUrl || "https://t.me/connectandconvert",
+    destinationUrl: initialData?.destinationUrl || SITE_CONFIG.contact.telegramUrl,
 
     autoRedirect: initialData?.autoRedirect ?? true,
     redirectAfterSeconds: initialData?.redirectAfterSeconds || 8,
@@ -525,7 +526,7 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
               </label>
               <input
                 type="url"
-                placeholder="https://t.me/connectandconvert or https://t.me/+yourInviteCode"
+                placeholder={`${SITE_CONFIG.contact.telegramUrl} or https://t.me/+yourInviteCode`}
                 value={formData.destinationUrl}
                 onChange={(e) => handleChange("destinationUrl", e.target.value)}
                 className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"

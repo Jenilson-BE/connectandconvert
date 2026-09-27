@@ -7,6 +7,12 @@ import { PageReportView } from "@/components/admin/PageReportView";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ from?: string | string[]; to?: string | string[] }>;
+}
+
+function firstValue(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -17,9 +23,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
-export default async function AdminReportPage({ params }: PageProps) {
+export default async function AdminReportPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
-  const report = await getPageReport(slug);
+  const query = await searchParams;
+  const from = firstValue(query.from);
+  const to = firstValue(query.to);
+  const report = await getPageReport(slug, { from, to });
 
   if (!report) {
     return (
