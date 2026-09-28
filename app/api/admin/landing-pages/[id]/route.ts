@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardAdminRequest } from "@/lib/admin-guard";
 import { revalidatePath } from "next/cache";
 import {
   getLandingPageById,
@@ -11,19 +12,14 @@ import {
   isValidMetaPixelId,
   META_PIXEL_ID_ERROR,
 } from "@/lib/meta-pixel-id";
-
-function checkAuth(request: NextRequest): boolean {
-  const session = request.cookies.get("cc_admin_session");
-  return session?.value === "authenticated";
-}
+import { validateLandingPageUrls } from "@/lib/url-safety";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const { id } = await params;
   const page = await getLandingPageById(id);
@@ -38,9 +34,8 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const { id } = await params;
 
@@ -66,6 +61,14 @@ export async function PUT(
     if (!cleanedSlug) {
       return NextResponse.json(
         { success: false, message: "Slug must contain at least one letter or number." },
+        { status: 400 }
+      );
+    }
+
+    const urls = validateLandingPageUrls(body);
+    if (!urls.ok) {
+      return NextResponse.json(
+        { success: false, message: urls.error },
         { status: 400 }
       );
     }
@@ -111,9 +114,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const { id } = await params;
 

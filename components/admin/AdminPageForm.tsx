@@ -26,6 +26,7 @@ import {
 } from "@/lib/meta-pixel-id";
 import { SITE_CONFIG } from "@/lib/constants";
 import { Button } from "@/components/ui/Button";
+import { ImageUploader } from "@/components/admin/ImageUploader";
 
 interface AdminPageFormProps {
   initialData?: Partial<LandingPageConfig>;
@@ -367,15 +368,12 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
             </div>
 
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
-                Social Share Image (OG Image URL)
-              </label>
-              <input
-                type="text"
-                placeholder="/profit-queen-logo.jpg or https://..."
-                value={formData.ogImage}
-                onChange={(e) => handleChange("ogImage", e.target.value)}
-                className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
+              <ImageUploader
+                kind="og"
+                label="Social Share Image (OG Image)"
+                value={formData.ogImage ?? ""}
+                onChange={(url) => handleChange("ogImage", url)}
+                hint="Recommended 1200x630. JPG, PNG, WebP or GIF. Max 5 MB."
               />
             </div>
           </div>
@@ -403,15 +401,13 @@ export function AdminPageForm({ initialData, isEditing = false }: AdminPageFormP
               </div>
 
               <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#17121F] mb-2">
-                  Logo Image URL
-                </label>
-                <input
-                  type="text"
-                  placeholder="/profit-queen-logo.jpg or /logo.png"
+                <ImageUploader
+                  kind="logo"
+                  label="Logo Image"
                   value={formData.logoUrl}
-                  onChange={(e) => handleChange("logoUrl", e.target.value)}
-                  className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"
+                  onChange={(url) => handleChange("logoUrl", url)}
+                  square
+                  localPlaceholder="/logo.png"
                 />
               </div>
             </div>

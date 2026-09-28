@@ -1,15 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardAdminRequest } from "@/lib/admin-guard";
 import { getAllLandingPages, getRecentVisitLogs } from "@/lib/landing-storage";
 
-function checkAuth(request: NextRequest): boolean {
-  const session = request.cookies.get("cc_admin_session");
-  return session?.value === "authenticated";
-}
-
 export async function GET(request: NextRequest) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const pages = await getAllLandingPages();
   const logs = await getRecentVisitLogs(50);

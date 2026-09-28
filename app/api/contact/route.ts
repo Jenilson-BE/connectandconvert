@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { SITE_CONFIG } from "@/lib/constants";
+import { getClientIp } from "@/lib/admin-guard";
+import { checkRateLimit } from "@/lib/rate-limit";
+
+/** The form is public, so cap how often one source can submit. */
+const CONTACT_LIMIT = { limit: 5, windowMs: 10 * 60 * 1000 };
 
 const serverContactSchema = z.object({
   fullName: z.string().min(2, "Full name is required."),
@@ -17,6 +22,29 @@ const serverContactSchema = z.object({
 
 export async function POST(request: NextRequest) {
   try {
+    const ip = getClientIp(request);
+    const rate = checkRateLimit(`contact:${ip}`, CONTACT_LIMIT);
+    if (!rate.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Too many submissions. Please wait a few minutes and try again.",
+        },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.max(rate.retryAfterSeconds, 1)) },
+        }
+      );
+    }
+
+    const declaredLength = Number(request.headers.get("content-length") ?? "0");
+    if (Number.isFinite(declaredLength) && declaredLength > 64 * 1024) {
+      return NextResponse.json(
+        { success: false, message: "Submission too large." },
+        { status: 413 }
+      );
+    }
+
     const body = await request.json();
 
     // 1. Validate payload with Zod
@@ -74,6 +102,7 @@ export async function POST(request: NextRequest) {
             submittedAt: new Date().toISOString(),
             source: "connectandconvert.tech/contact",
           }),
+          signal: AbortSignal.timeout(5000),
         });
       } catch (webhookErr) {
         console.error("Webhook dispatch warning:", webhookErr);
@@ -107,6 +136,7 @@ Goals: ${data.marketingGoals}
 Additional Context: ${data.additionalMessage || "None"}
             `,
           }),
+          signal: AbortSignal.timeout(8000),
         });
         if (resendResponse.ok) {
           emailDispatched = true;

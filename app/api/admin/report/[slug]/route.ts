@@ -1,21 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardAdminRequest } from "@/lib/admin-guard";
 import { getPageReport } from "@/lib/landing-storage";
-
-function checkAuth(request: NextRequest): boolean {
-  const session = request.cookies.get("cc_admin_session");
-  return session?.value === "authenticated";
-}
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ slug: string }> }
 ) {
-  if (!checkAuth(request)) {
-    return NextResponse.json(
-      { success: false, message: "Unauthorized. Please log in to admin." },
-      { status: 401 }
-    );
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const { slug } = await context.params;
   const from = request.nextUrl.searchParams.get("from");

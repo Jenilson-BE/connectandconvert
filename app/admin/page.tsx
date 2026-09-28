@@ -72,12 +72,29 @@ export default function AdminDashboardPage() {
 
   // Check auth on load
   const checkAuthStatus = React.useCallback(async () => {
+    // A guarded admin page redirects here with a reason when access is denied.
+    const redirectReason = new URLSearchParams(window.location.search).get("error");
+
     try {
       const res = await fetch("/api/admin/auth");
       const data = await res.json();
       setIsAuthenticated(data.authenticated);
+
       if (data.authenticated) {
         await fetchDashboardData();
+        return;
+      }
+
+      if (data.configured === false) {
+        setAuthError(
+          "Admin access is not configured on this server. Set ADMIN_PASSCODE and restart."
+        );
+      } else if (redirectReason === "session-expired") {
+        setAuthError("Your session has expired. Please sign in again.");
+      } else if (redirectReason === "not-configured") {
+        setAuthError(
+          "Admin access is not configured on this server. Set ADMIN_PASSCODE and restart."
+        );
       }
     } catch {
       setIsAuthenticated(false);
@@ -85,7 +102,12 @@ export default function AdminDashboardPage() {
   }, []);
 
   React.useEffect(() => {
-    checkAuthStatus();
+    // The extra async boundary keeps the state updates out of the effect's
+    // synchronous pass, which avoids a cascading render on mount.
+    const run = async () => {
+      await checkAuthStatus();
+    };
+    void run();
   }, [checkAuthStatus]);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -183,7 +205,7 @@ export default function AdminDashboardPage() {
           <form onSubmit={handleLogin} className="space-y-4">
             <input
               type="password"
-              placeholder="Enter passcode (default: admin123)"
+              placeholder="Enter admin passcode"
               value={passcode}
               onChange={(e) => setPasscode(e.target.value)}
               className="w-full px-4 py-3 rounded-xl border border-[#E8E2EF] text-sm text-center font-mono tracking-widest text-[#17121F] bg-[#FAF9FC] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#6D28D9]"

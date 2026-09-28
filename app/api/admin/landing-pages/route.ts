@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { guardAdminRequest } from "@/lib/admin-guard";
 import { revalidatePath } from "next/cache";
 import {
   getAllLandingPages,
@@ -11,25 +12,20 @@ import {
   isValidMetaPixelId,
   META_PIXEL_ID_ERROR,
 } from "@/lib/meta-pixel-id";
+import { validateLandingPageUrls } from "@/lib/url-safety";
 
-function checkAuth(request: NextRequest): boolean {
-  const session = request.cookies.get("cc_admin_session");
-  return session?.value === "authenticated";
-}
 
 export async function GET(request: NextRequest) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   const pages = await getAllLandingPages();
   return NextResponse.json({ success: true, pages });
 }
 
 export async function POST(request: NextRequest) {
-  if (!checkAuth(request)) {
-    return NextResponse.json({ success: false, message: "Unauthorized." }, { status: 401 });
-  }
+  const denied = guardAdminRequest(request);
+  if (denied) return denied;
 
   try {
     const body: LandingPageConfig = await request.json();
@@ -45,6 +41,14 @@ export async function POST(request: NextRequest) {
     if (!cleanedSlug) {
       return NextResponse.json(
         { success: false, message: "Slug must contain at least one letter or number." },
+        { status: 400 }
+      );
+    }
+
+    const urls = validateLandingPageUrls(body);
+    if (!urls.ok) {
+      return NextResponse.json(
+        { success: false, message: urls.error },
         { status: 400 }
       );
     }

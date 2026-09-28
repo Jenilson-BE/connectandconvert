@@ -12,13 +12,36 @@ const PIXEL_SRC = "https://connect.facebook.net/en_US/fbevents.js";
 
 let activePixelId: string | null = null;
 
-export function initMetaPixel(rawPixelId?: string): boolean {
-  if (typeof window === "undefined") return false;
+/**
+ * Every landing page carries its own pixel ID, so the caller needs to tell
+ * "this page is untracked" apart from "this page's ID is malformed" to log the
+ * right thing.
+ */
+export type MetaPixelInitResult = "ready" | "switched" | "inactive" | "invalid";
+
+export function initMetaPixel(rawPixelId?: string): MetaPixelInitResult {
+  if (typeof window === "undefined") return "inactive";
 
   const pId = normalizeMetaPixelId(rawPixelId);
-  if (!isValidMetaPixelId(pId)) return false;
-  if (activePixelId === pId) return true;
-  if (window.fbq) return false;
+  if (!isValidMetaPixelId(pId)) {
+    // Drop any pixel left behind by a previously viewed page. Without this, a
+    // page with no ID of its own keeps reporting into the last page's pixel.
+    activePixelId = null;
+    return rawPixelId && String(rawPixelId).trim() !== "" ? "invalid" : "inactive";
+  }
+
+  if (activePixelId === pId) return "ready";
+
+  if (window.fbq) {
+    // fbevents.js is already loaded because this is a client-side navigation
+    // from another landing page. Re-initialising the existing instance is the
+    // supported way to point it at a different pixel. Returning early here
+    // would leave this page's events attributed to the previous page's ID.
+    activePixelId = pId;
+    window.fbq("init", pId);
+    window.fbq("track", "PageView");
+    return "switched";
+  }
 
   const n: any = (window.fbq = (...args: unknown[]) => {
     if (n.callMethod) {
@@ -41,7 +64,15 @@ export function initMetaPixel(rawPixelId?: string): boolean {
   activePixelId = pId;
   window.fbq("init", pId);
   window.fbq("track", "PageView");
-  return true;
+  return "ready";
+}
+
+/**
+ * Stop attributing events to a pixel, e.g. when unmounting a landing page so
+ * its ID does not carry over into an unrelated route.
+ */
+export function resetMetaPixel(): void {
+  activePixelId = null;
 }
 
 export function getActiveMetaPixelId(): string | null {

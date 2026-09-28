@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Crown, Send, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 import { LandingPageConfig } from "@/lib/landing-types";
-import { initMetaPixel, getMetaPixelNoScriptUrl } from "@/lib/landing-engine/meta-pixel";
+import { initMetaPixel, getMetaPixelNoScriptUrl, resetMetaPixel } from "@/lib/landing-engine/meta-pixel";
 import { captureAttribution } from "@/lib/landing-engine/attribution";
 import {
   trackLandingView,
@@ -69,7 +69,7 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
 
   // Initialize tracking
   React.useEffect(() => {
-    if (!initMetaPixel(page.metaPixelId) && page.metaPixelId) {
+    if (initMetaPixel(page.metaPixelId) === "invalid") {
       console.warn(
         `[landing] Meta Pixel ID "${page.metaPixelId}" is not a valid 15-16 digit ID; pixel events are disabled for this page.`
       );
@@ -110,6 +110,7 @@ export function LandingTemplateView({ page }: LandingTemplateViewProps) {
       window.removeEventListener("scroll", handleScroll);
       observer?.disconnect();
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      resetMetaPixel();
     };
   }, [
     page.metaPixelId,

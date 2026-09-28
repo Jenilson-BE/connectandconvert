@@ -3,7 +3,12 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { getPageReport } from "@/lib/landing-storage";
+import { requireAdminPage } from "@/lib/admin-guard";
 import { PageReportView } from "@/components/admin/PageReportView";
+
+// The report embeds visit-level analytics, so it must never be prerendered or
+// served from cache.
+export const dynamic = "force-dynamic";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -24,6 +29,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export default async function AdminReportPage({ params, searchParams }: PageProps) {
+  await requireAdminPage();
+
   const { slug } = await params;
   const query = await searchParams;
   const from = firstValue(query.from);
