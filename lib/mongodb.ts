@@ -1,6 +1,10 @@
 import { MongoClient, Db } from "mongodb";
 
-const uri = process.env.MONGODB_URI || "mongodb://localhost:27017/connectandconvert";
+const envUri = process.env.MONGODB_URI?.trim();
+const uri =
+  envUri ||
+  (process.env.NODE_ENV === "production" ? "" : "mongodb://localhost:27017/connectandconvert");
+
 const options = {
   serverSelectionTimeoutMS: 2000,
   connectTimeoutMS: 3000,

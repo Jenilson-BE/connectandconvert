@@ -34,16 +34,54 @@ const MIME_TO_FORMAT: Record<string, AllowedImageFormat> = {
   "image/gif": "gif",
 };
 
+export interface CloudinaryConfig {
+  cloudName: string;
+  apiKey: string;
+  apiSecret: string;
+}
+
+export function getCloudinaryConfig(): CloudinaryConfig | null {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
+
+  if (cloudName && apiKey && apiSecret) {
+    return { cloudName, apiKey, apiSecret };
+  }
+
+  const cloudinaryUrl = process.env.CLOUDINARY_URL?.trim();
+  if (cloudinaryUrl) {
+    try {
+      const parsed = new URL(cloudinaryUrl);
+      if (
+        parsed.protocol === "cloudinary:" &&
+        parsed.username &&
+        parsed.password &&
+        parsed.hostname
+      ) {
+        return {
+          cloudName: parsed.hostname,
+          apiKey: parsed.username,
+          apiSecret: parsed.password,
+        };
+      }
+    } catch {
+      // Invalid URL format
+    }
+  }
+
+  return null;
+}
+
 export function isCloudinaryConfigured(): boolean {
-  return Boolean(
-    process.env.CLOUDINARY_CLOUD_NAME &&
-      process.env.CLOUDINARY_API_KEY &&
-      process.env.CLOUDINARY_API_SECRET
-  );
+  return getCloudinaryConfig() !== null;
 }
 
 function getUploadFolder(): string {
-  return (process.env.CLOUDINARY_UPLOAD_FOLDER || "connectandconvert").replace(/^\/+|\/+$/g, "");
+  const base = (process.env.CLOUDINARY_UPLOAD_FOLDER || "connectandconvert")
+    .trim()
+    .replace(/^\/+|\/+$/g, "");
+  return base || "connectandconvert";
 }
 
 export function resolveMaxBytes(kind: MediaKind): number {
@@ -105,25 +143,30 @@ export function sniffImageFormat(bytes: Uint8Array): AllowedImageFormat | null {
 }
 
 /**
- * Cloudinary's signed-upload signature: SHA-1 over the alphabetically sorted
- * `key=value` pairs, with the API secret appended.
+ * Cloudinary's signed-upload signature: SHA-1 hex digest over alphabetically
+ * sorted `key=value` pairs, with the API secret appended.
  *
- * `file`, `api_key`, `signature` and `resource_type` are excluded per
- * Cloudinary's specification. SHA-1 is required by their API; it is an
- * integrity check on a request this server assembles itself, not a security
- * primitive chosen on our side.
+ * `file`, `api_key`, `signature`, `resource_type`, and `cloud_name` are excluded
+ * per Cloudinary's specification. Empty or undefined parameters are also skipped.
+ * SHA-1 hex digest is required by the Cloudinary API.
  */
 export function buildCloudinarySignature(
   params: Record<string, string>,
   apiSecret: string
 ): string {
   const toSign = Object.keys(params)
-    .filter((key) => !["file", "api_key", "signature", "resource_type"].includes(key))
+    .filter(
+      (key) =>
+        !["file", "api_key", "signature", "resource_type", "cloud_name"].includes(key) &&
+        params[key] !== undefined &&
+        params[key] !== null &&
+        params[key] !== ""
+    )
     .sort()
     .map((key) => `${key}=${params[key]}`)
     .join("&");
 
-  return createHash("sha1").update(`${toSign}${apiSecret}`).digest("base64");
+  return createHash("sha1").update(`${toSign}${apiSecret}`).digest("hex");
 }
 
 export interface CloudinaryUploadResult {
@@ -146,16 +189,15 @@ export async function uploadImageToCloudinary(
   format: AllowedImageFormat,
   kind: MediaKind
 ): Promise<CloudinaryUploadResult> {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+  const config = getCloudinaryConfig();
 
-  if (!cloudName || !apiKey || !apiSecret) {
+  if (!config) {
     throw new Error(
-      "Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET."
+      "Cloudinary is not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET (or CLOUDINARY_URL)."
     );
   }
 
+  const { cloudName, apiKey, apiSecret } = config;
   const timestamp = Math.floor(Date.now() / 1000).toString();
 
   // Signed so the client cannot alter it.
@@ -188,7 +230,18 @@ export async function uploadImageToCloudinary(
   if (!response.ok) {
     const detail = await response.text().catch(() => "");
     console.error("Cloudinary upload failed:", response.status, detail.slice(0, 500));
-    throw new Error(`Cloudinary rejected the upload (status ${response.status}).`);
+    let errorMessage = `Cloudinary rejected the upload (status ${response.status}).`;
+    try {
+      const parsed = JSON.parse(detail);
+      if (parsed?.error?.message) {
+        errorMessage = `Cloudinary: ${parsed.error.message}`;
+      }
+    } catch {
+      if (detail.trim()) {
+        errorMessage = `Cloudinary (${response.status}): ${detail.slice(0, 200)}`;
+      }
+    }
+    throw new Error(errorMessage);
   }
 
   const data = (await response.json()) as {

@@ -12,8 +12,6 @@ import {
 import {
   IST_TIME_ZONE,
   DAILY_REPORT_MAX_DAYS,
-  buildDailyRows,
-  fillMissingDays,
   finalizeDailyRow,
   getIstRangeStartDayKey,
   istDayKeyToUtcStartIso,
@@ -23,7 +21,6 @@ import { normalizeMetaPixelId, isValidMetaPixelId } from "./meta-pixel-id";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const PAGES_FILE = path.join(DATA_DIR, "landing-pages.json");
-const LOGS_FILE = path.join(DATA_DIR, "visit-logs.json");
 
 const PAGES_COLLECTION = "landing_pages";
 const LOGS_COLLECTION = "visit_logs";
@@ -65,56 +62,37 @@ function stripId<T extends { _id?: unknown }>(doc: T): Omit<T, "_id"> {
 }
 
 // --------------------------------------------------------------------------
-// File Storage Fallbacks
+// File Storage Fallbacks (Read seed data / safe local fallback)
 // --------------------------------------------------------------------------
-function ensureDataFiles() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-  if (!fs.existsSync(PAGES_FILE)) {
-    fs.writeFileSync(PAGES_FILE, JSON.stringify([], null, 2), "utf-8");
-  }
-  if (!fs.existsSync(LOGS_FILE)) {
-    fs.writeFileSync(LOGS_FILE, JSON.stringify([], null, 2), "utf-8");
-  }
-}
-
 function getFileLandingPages(): LandingPageConfig[] {
   try {
-    ensureDataFiles();
-    const raw = fs.readFileSync(PAGES_FILE, "utf-8");
-    return JSON.parse(raw) as LandingPageConfig[];
+    if (fs.existsSync(PAGES_FILE)) {
+      const raw = fs.readFileSync(PAGES_FILE, "utf-8");
+      return JSON.parse(raw) as LandingPageConfig[];
+    }
   } catch (err) {
-    console.error("Error reading landing pages file:", err);
-    return [];
+    console.warn("Error reading landing pages file:", err);
   }
+  return [];
 }
 
 function saveFileLandingPages(pages: LandingPageConfig[]) {
   try {
-    ensureDataFiles();
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
     fs.writeFileSync(PAGES_FILE, JSON.stringify(pages, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing landing pages file:", err);
-  }
-}
-
-function getFileVisitLogs(): VisitLogEntry[] {
-  try {
-    ensureDataFiles();
-    const raw = fs.readFileSync(LOGS_FILE, "utf-8");
-    return JSON.parse(raw) as VisitLogEntry[];
-  } catch {
-    return [];
-  }
-}
-
-function saveFileVisitLogs(logs: VisitLogEntry[]) {
-  try {
-    ensureDataFiles();
-    fs.writeFileSync(LOGS_FILE, JSON.stringify(logs, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Error writing visit logs file:", err);
+  } catch (err: unknown) {
+    if (
+      err &&
+      typeof err === "object" &&
+      "code" in err &&
+      (err as { code: string }).code === "EROFS"
+    ) {
+      // In serverless environments (read-only filesystem), ignore EROFS silently
+      return;
+    }
+    console.warn("Could not write landing pages file:", err);
   }
 }
 
@@ -132,10 +110,7 @@ export async function getAllLandingPages(): Promise<LandingPageConfig[]> {
         .sort({ updatedAt: -1 })
         .toArray();
       // Remove MongoDB internal _id field
-      const cleanDocs = docs.map((d) => stripId(d) as LandingPageConfig);
-      // Sync to file mirror
-      saveFileLandingPages(cleanDocs);
-      return cleanDocs;
+      return docs.map((d) => stripId(d) as LandingPageConfig);
     }
   } catch (err) {
     console.warn("MongoDB getAllLandingPages fallback to file:", err);
@@ -214,12 +189,13 @@ export async function saveLandingPage(page: LandingPageConfig): Promise<LandingP
         { $set: preparedPage },
         { upsert: true }
       );
+      return preparedPage;
     }
   } catch (err) {
     console.warn("MongoDB saveLandingPage warning:", err);
   }
 
-  // Update file mirror
+  // Update file only if MongoDB is not available (local offline development)
   const filePages = getFileLandingPages();
   const existingIdx = filePages.findIndex((p) => p.id === preparedPage.id);
   if (existingIdx >= 0) {
@@ -233,30 +209,29 @@ export async function saveLandingPage(page: LandingPageConfig): Promise<LandingP
 }
 
 export async function deleteLandingPage(id: string): Promise<boolean> {
-  let deleted = false;
   try {
     const db = await getDb();
     if (db) {
       const res = await db.collection(PAGES_COLLECTION).deleteOne({ id });
-      if (res.deletedCount > 0) deleted = true;
+      return res.deletedCount > 0;
     }
   } catch (err) {
     console.warn("MongoDB deleteLandingPage warning:", err);
   }
 
-  // Sync with file mirror
+  // Fallback for local development when MongoDB is not connected
   const filePages = getFileLandingPages();
   const filtered = filePages.filter((p) => p.id !== id);
   if (filtered.length !== filePages.length) {
-    deleted = true;
     saveFileLandingPages(filtered);
+    return true;
   }
 
-  return deleted;
+  return false;
 }
 
 // --------------------------------------------------------------------------
-// Visit Logs & Analytics Operations (MongoDB + File Fallback)
+// Visit Logs & Analytics Operations (Database Only - No Folder Logs)
 // --------------------------------------------------------------------------
 export async function recordVisit(
   slug: string,
@@ -280,12 +255,11 @@ export async function recordVisit(
     attribution: logData.attribution || {},
   };
 
-  // 1. Update in MongoDB
   try {
     const db = await getDb();
     if (db) {
       await ensureIndexes();
-      // Insert log document
+      // Insert log document into MongoDB
       await db.collection(LOGS_COLLECTION).insertOne(newLog);
 
       // Increment counters on page document
@@ -310,31 +284,6 @@ export async function recordVisit(
   } catch (err) {
     console.warn("MongoDB recordVisit warning:", err);
   }
-
-  // 2. Sync to file mirror
-  try {
-    const pages = getFileLandingPages();
-    const pageIdx = pages.findIndex((p) => p.slug.toLowerCase() === cleanSlug);
-    if (pageIdx >= 0) {
-      if (type === "websitevisit") {
-        pages[pageIdx].visits = (pages[pageIdx].visits || 0) + 1;
-      } else if (type === "subscribe") {
-        pages[pageIdx].clicks = (pages[pageIdx].clicks || 0) + 1;
-        pages[pageIdx].subscribes = (pages[pageIdx].subscribes || 0) + 1;
-      } else if (type === "autoredirect") {
-        pages[pageIdx].clicks = (pages[pageIdx].clicks || 0) + 1;
-        pages[pageIdx].autoredirects = (pages[pageIdx].autoredirects || 0) + 1;
-      }
-      saveFileLandingPages(pages);
-    }
-
-    const logs = getFileVisitLogs();
-    logs.unshift(newLog);
-    if (logs.length > 1500) logs.pop();
-    saveFileVisitLogs(logs);
-  } catch (err) {
-    console.error("Error mirroring visit to file:", err);
-  }
 }
 
 export async function getRecentVisitLogs(limit = 50): Promise<VisitLogEntry[]> {
@@ -351,11 +300,10 @@ export async function getRecentVisitLogs(limit = 50): Promise<VisitLogEntry[]> {
       return docs.map((d) => stripId(d) as VisitLogEntry);
     }
   } catch (err) {
-    console.warn("MongoDB getRecentVisitLogs fallback to file:", err);
+    console.warn("MongoDB getRecentVisitLogs warning:", err);
   }
 
-  const logs = getFileVisitLogs();
-  return logs.slice(0, limit);
+  return [];
 }
 
 export interface GetPageReportOptions {
@@ -425,25 +373,10 @@ async function getEventCounts(
       };
     }
   } catch (err) {
-    console.warn("MongoDB getEventCounts fallback to file:", err);
+    console.warn("MongoDB getEventCounts warning:", err);
   }
 
-  return getFileVisitLogs()
-    .filter((l) => l.slug.toLowerCase() === cleanSlug)
-    .filter((l) => {
-      if (fromIso && l.ts < fromIso) return false;
-      if (toIso && l.ts >= toIso) return false;
-      return true;
-    })
-    .reduce<EventCounts>(
-      (acc, l) => {
-        if (l.type === "websitevisit") acc.landings += 1;
-        else if (l.type === "subscribe") acc.subscribes += 1;
-        else if (l.type === "autoredirect") acc.autoredirects += 1;
-        return acc;
-      },
-      { ...empty }
-    );
+  return empty;
 }
 
 export async function getDailyBreakdown(
@@ -507,15 +440,10 @@ export async function getDailyBreakdown(
       );
     }
   } catch (err) {
-    console.warn("MongoDB getDailyBreakdown fallback to file:", err);
+    console.warn("MongoDB getDailyBreakdown warning:", err);
   }
 
-  const logs = getFileVisitLogs().filter((l) => l.slug.toLowerCase() === cleanSlug);
-  const rows = buildDailyRows(logs, fromIso ?? undefined);
-  if (range.active && range.from && range.to) {
-    return fillMissingDays(rows, range.from, range.to);
-  }
-  return rows;
+  return [];
 }
 
 export async function getPageReport(
@@ -545,12 +473,7 @@ export async function getPageReport(
       pageLogs = docs.map((d) => stripId(d) as VisitLogEntry);
     }
   } catch (err) {
-    console.warn("MongoDB getPageReport fallback to file logs:", err);
-  }
-
-  if (pageLogs.length === 0) {
-    const allLogs = getFileVisitLogs();
-    pageLogs = allLogs.filter((l) => l.slug.toLowerCase() === cleanSlug);
+    console.warn("MongoDB getPageReport warning:", err);
   }
 
   // Trim the file mirror to the requested window as well.

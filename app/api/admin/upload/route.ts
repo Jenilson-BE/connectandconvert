@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         message:
-          "Image uploads are not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, then restart the server.",
+          "Image uploads are not configured. Set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET (or CLOUDINARY_URL), then restart the server.",
       },
       { status: 503 }
     );
